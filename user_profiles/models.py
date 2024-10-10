@@ -11,7 +11,6 @@ class Users(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=255, default='')
     last_name = models.CharField(max_length=255, default='')
-    position = models.CharField(max_length=255, default='')
     phone = models.CharField(max_length=20, default='')
     city = models.CharField(max_length=20, default='')
     avatar = models.ImageField(blank=True, upload_to='avatars/')

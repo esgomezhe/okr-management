@@ -53,16 +53,16 @@ class Objective(models.Model):
     def __str__(self):
         return self.title
     
-    def get_okrs_num(self):
-        return self.okrs.all().count()
+    def get_krs_num(self):
+        return self.krs.all().count()
 
-class OKR(models.Model):
-    objective = models.ForeignKey(Objective, related_name='okrs', on_delete=models.CASCADE)
+class KR(models.Model):
+    objective = models.ForeignKey(Objective, related_name='krs', on_delete=models.CASCADE)
     key_result = models.CharField(max_length=255)
     target_value = models.PositiveIntegerField()
     current_value = models.PositiveIntegerField(default=0)
     progress = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(100)])
-    owner = models.ForeignKey(Users, related_name='okrs', on_delete=models.CASCADE)
+    owner = models.ForeignKey(Users, related_name='krs', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     
@@ -78,7 +78,7 @@ class OKR(models.Model):
             self.save()
 
 class Activity(models.Model):
-    okr = models.ForeignKey(OKR, related_name='activities', on_delete=models.CASCADE)
+    kr = models.ForeignKey(KR, related_name='activities', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=2000, blank=True)
     owner = models.ForeignKey(Users, related_name='activities', on_delete=models.CASCADE)
@@ -138,7 +138,7 @@ class Task(models.Model):
 class Log(models.Model):
     project = models.ForeignKey(Project, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
     objective = models.ForeignKey(Objective, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
-    okr = models.ForeignKey(OKR, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
+    kr = models.ForeignKey(KR, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
     activity = models.ForeignKey(Activity, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
     task = models.ForeignKey(Task, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(
@@ -156,8 +156,7 @@ class Log(models.Model):
         return f"Log-{self.id}"
 
 class Comment(models.Model):
-    task = models.ForeignKey(Task, related_name='comments',
-                             on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(
         Users, related_name='comments', on_delete=models.CASCADE, null=True) 
     text = models.TextField(max_length=1250, blank=False)
