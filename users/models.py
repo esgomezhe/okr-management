@@ -17,8 +17,8 @@ class Users(models.Model):
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='employee')
 
     def __str__(self):
-        return f'{self.user}'
-    
+        return f'{self.user.username}'
+
     def save(self, *args, **kwargs):
         if not self.first_name:
             self.first_name = self.user.first_name
@@ -28,3 +28,7 @@ class Users(models.Model):
     
     def get_tasks_num(self):
         return self.tasks.all().count()
+    
+    class Meta:
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'
