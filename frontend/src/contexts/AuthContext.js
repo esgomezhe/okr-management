@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const access = localStorage.getItem('access');
+    console.log('Token obtenido de localStorage:', access); // Agregar esta línea
     if (access) {
       Promise.all([
         getUserDetails(access),
@@ -21,11 +22,13 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       });
     } else {
+      console.log('No hay token en localStorage.');
       setLoading(false);
     }
   }, []);
 
   const login = async (accessToken) => {
+    console.log('Login con token:', accessToken); // Agregar esta línea
     localStorage.setItem('access', accessToken);
     try {
       const [userData] = await Promise.all([
@@ -39,6 +42,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('Cerrando sesión.');
     localStorage.removeItem('access');
     setUser(null);
   };

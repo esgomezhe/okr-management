@@ -1,3 +1,5 @@
+# serializers.py
+
 from rest_framework import serializers
 from users.models import Users
 from .models import Project, ProjectMembers, Objective, OKR, Activity, Task, Log, Comment
@@ -8,16 +10,83 @@ class UsersSimpleSerializer(serializers.ModelSerializer):
         model = Users
         fields = ['id', 'user', 'first_name', 'last_name', 'role']
 
+class TaskSerializer(serializers.ModelSerializer):
+    assignee = UsersSimpleSerializer(read_only=True)
+    assignee_id = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), write_only=True, source='assignee'
+    )
+    activity = serializers.PrimaryKeyRelatedField(queryset=Activity.objects.all())
+    parent_task = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all(), allow_null=True, required=False)
+
+    class Meta:
+        model = Task
+        fields = [
+            'id', 'activity', 'title', 'desc', 'assignee', 'assignee_id',
+            'parent_task', 'status', 'completion_percentage', 'archived',
+            'created', 'updated'
+        ]
+
+class ActivitySerializer(serializers.ModelSerializer):
+    owner = UsersSimpleSerializer(read_only=True)
+    owner_id = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), write_only=True, source='owner'
+    )
+    okr = serializers.PrimaryKeyRelatedField(queryset=OKR.objects.all())
+    tasks = TaskSerializer(many=True, read_only=True)  # Anidado
+
+    class Meta:
+        model = Activity
+        fields = [
+            'id', 'okr', 'name', 'description', 'owner', 'owner_id',
+            'start_date', 'end_date', 'tasks', 'created', 'updated'
+        ]
+
+class OKRSerializer(serializers.ModelSerializer):
+    owner = UsersSimpleSerializer(read_only=True)
+    owner_id = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), write_only=True, source='owner'
+    )
+    objective = serializers.PrimaryKeyRelatedField(queryset=Objective.objects.all())
+    activities = ActivitySerializer(many=True, read_only=True)  # Anidado
+
+    class Meta:
+        model = OKR
+        fields = [
+            'id', 'objective', 'key_result', 'target_value',
+            'current_value', 'progress', 'owner', 'owner_id',
+            'activities', 'created', 'updated'
+        ]
+
+class ObjectiveSerializer(serializers.ModelSerializer):
+    owner = UsersSimpleSerializer(read_only=True)
+    owner_id = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), write_only=True, source='owner'
+    )
+    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    okrs = OKRSerializer(many=True, read_only=True)  # Anidado
+
+    class Meta:
+        model = Objective
+        fields = [
+            'id', 'project', 'title', 'description', 'owner', 'owner_id',
+            'okrs', 'created', 'updated'
+        ]
+
 class ProjectSerializer(serializers.ModelSerializer):
     created_by = UsersSimpleSerializer(read_only=True)
     members = UsersSimpleSerializer(many=True, read_only=True)
     members_ids = serializers.PrimaryKeyRelatedField(
         queryset=Users.objects.all(), many=True, write_only=True, source='members'
     )
+    objectives = ObjectiveSerializer(many=True, read_only=True)  # Anidado
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'created_by', 'members', 'members_ids', 'start_date', 'end_date', 'color', 'created', 'updated']
+        fields = [
+            'id', 'name', 'description', 'created_by', 'members', 'members_ids',
+            'objectives',
+            'start_date', 'end_date', 'color', 'created', 'updated'
+        ]
 
     def create(self, validated_data):
         members = validated_data.pop('members', [])
@@ -46,51 +115,6 @@ class ProjectMembersSerializer(serializers.ModelSerializer):
         model = ProjectMembers
         fields = ['id', 'project', 'user', 'user_id', 'joined_at']
 
-class ObjectiveSerializer(serializers.ModelSerializer):
-    owner = UsersSimpleSerializer(read_only=True)
-    owner_id = serializers.PrimaryKeyRelatedField(
-        queryset=Users.objects.all(), write_only=True, source='owner'
-    )
-    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-
-    class Meta:
-        model = Objective
-        fields = ['id', 'project', 'title', 'description', 'owner', 'owner_id', 'created', 'updated']
-
-class OKRSerializer(serializers.ModelSerializer):
-    owner = UsersSimpleSerializer(read_only=True)
-    owner_id = serializers.PrimaryKeyRelatedField(
-        queryset=Users.objects.all(), write_only=True, source='owner'
-    )
-    objective = serializers.PrimaryKeyRelatedField(queryset=Objective.objects.all())
-
-    class Meta:
-        model = OKR
-        fields = ['id', 'objective', 'key_result', 'target_value', 'current_value', 'progress', 'owner', 'owner_id', 'created', 'updated']
-
-class ActivitySerializer(serializers.ModelSerializer):
-    owner = UsersSimpleSerializer(read_only=True)
-    owner_id = serializers.PrimaryKeyRelatedField(
-        queryset=Users.objects.all(), write_only=True, source='owner'
-    )
-    okr = serializers.PrimaryKeyRelatedField(queryset=OKR.objects.all())
-
-    class Meta:
-        model = Activity
-        fields = ['id', 'okr', 'name', 'description', 'owner', 'owner_id', 'start_date', 'end_date', 'created', 'updated']
-
-class TaskSerializer(serializers.ModelSerializer):
-    assignee = UsersSimpleSerializer(read_only=True)
-    assignee_id = serializers.PrimaryKeyRelatedField(
-        queryset=Users.objects.all(), write_only=True, source='assignee'
-    )
-    activity = serializers.PrimaryKeyRelatedField(queryset=Activity.objects.all())
-    parent_task = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all(), allow_null=True, required=False)
-
-    class Meta:
-        model = Task
-        fields = ['id', 'activity', 'title', 'desc', 'assignee', 'assignee_id', 'parent_task', 'status', 'completion_percentage', 'archived', 'created', 'updated']
-
 class LogSerializer(serializers.ModelSerializer):
     user = UsersSimpleSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
@@ -104,7 +128,10 @@ class LogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Log
-        fields = ['id', 'project', 'objective', 'okr', 'activity', 'task', 'user', 'user_id', 'log_text', 'log_type', 'log_color', 'created']
+        fields = [
+            'id', 'project', 'objective', 'okr', 'activity', 'task',
+            'user', 'user_id', 'log_text', 'log_type', 'log_color', 'created'
+        ]
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UsersSimpleSerializer(read_only=True)

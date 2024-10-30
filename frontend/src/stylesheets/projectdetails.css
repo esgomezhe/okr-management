@@ -1,0 +1,15 @@
+.project-details {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 6px;
+  }
+  
+  .project-details h4 {
+    margin-bottom: 5px;
+  }
+  
+  .project-details ul {
+    list-style-type: disc;
+    padding-left: 20px;
+  }

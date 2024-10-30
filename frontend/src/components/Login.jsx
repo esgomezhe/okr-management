@@ -1,25 +1,24 @@
-// src/components/AuthForm.jsx
-
 import React, { useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { registerUser, loginUser } from '../utils/apiServices';
 import { AuthContext } from '../contexts/AuthContext';
 import thankYouImage from '../img/grow-you-business.png';
 import '../stylesheets/results.css';
 
-function AuthForm() {
+function Login() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState(''); // Cambiado de fullName a firstName
-  const [lastName, setLastName] = useState('');   // Añadido lastName
-  const [phone, setPhone] = useState('');         // Añadido phone
-  const [city, setCity] = useState('');           // Añadido city
-  const [role, setRole] = useState('employee');   // Añadido role con valor por defecto
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
+  const [role, setRole] = useState('employee');
   const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState(''); // Añadido password2 para confirmar contraseña
+  const [password2, setPassword2] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [errors, setErrors] = useState({});
   const { user, login, loading } = useContext(AuthContext);
+  const navigate = useNavigate(); // Hook para navegar
 
   // Handlers para los campos del formulario
   const handleUsernameChange = (event) => {
@@ -74,9 +73,13 @@ function AuthForm() {
       const data = await loginUser(username, password);
       await login(data.access);
       setErrors({});
+      navigate('/dashboard'); // Navegar al Dashboard después del login
     } catch (error) {
       if (error.response && error.response.data.detail) {
         setErrors({ detail: error.response.data.detail });
+      } else if (error.response && error.response.data) {
+        // Manejar errores por campo
+        setErrors(error.response.data);
       } else {
         setErrors({ detail: 'Error al iniciar sesión. Inténtalo de nuevo.' });
       }
@@ -107,6 +110,7 @@ function AuthForm() {
       await handleLogin();
     } catch (error) {
       if (error.response && error.response.data) {
+        // Manejar errores por campo
         setErrors(error.response.data);
       } else {
         setErrors({ detail: 'Error al registrar usuario. Inténtalo de nuevo.' });
@@ -231,6 +235,18 @@ function AuthForm() {
                   <option value="admin">Administrador</option>
                   {/* Añade más roles según tus necesidades */}
                 </select>
+
+                {/* Campo de Confirmar Contraseña */}
+                <label htmlFor="password2" className="form-label">Confirmar Contraseña</label>
+                <input
+                  type="password"
+                  id="password2"
+                  name="password2"
+                  value={password2}
+                  onChange={handlePassword2Change}
+                  required
+                  className="form-input"
+                />
               </>
             )}
 
@@ -245,22 +261,6 @@ function AuthForm() {
               required
               className="form-input"
             />
-
-            {/* Campo de Confirmar Contraseña (Solo Registro) */}
-            {isRegister && (
-              <>
-                <label htmlFor="password2" className="form-label">Confirmar Contraseña</label>
-                <input
-                  type="password"
-                  id="password2"
-                  name="password2"
-                  value={password2}
-                  onChange={handlePassword2Change}
-                  required
-                  className="form-input"
-                />
-              </>
-            )}
 
             {/* Mostrar Errores */}
             {errors.detail && (
@@ -295,4 +295,4 @@ function AuthForm() {
   );
 }
 
-export default AuthForm;
+export default Login;

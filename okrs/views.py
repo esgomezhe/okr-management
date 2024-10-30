@@ -11,7 +11,9 @@ from .permissions import IsAdminOrManager, IsOwnerOrReadOnly
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
+    permission_classes = [permissions.AllowAny]  # Temporalmente AllowAny para desarrollo
+    # Revertir a las siguientes líneas en producción:
+    # permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user.users)
@@ -30,7 +32,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class ProjectMembersViewSet(viewsets.ModelViewSet):
     queryset = ProjectMembers.objects.all()
     serializer_class = ProjectMembersSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save()
@@ -38,7 +41,8 @@ class ProjectMembersViewSet(viewsets.ModelViewSet):
 class ObjectiveViewSet(viewsets.ModelViewSet):
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
@@ -46,7 +50,8 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
 class OKRViewSet(viewsets.ModelViewSet):
     queryset = OKR.objects.all()
     serializer_class = OKRSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
@@ -54,7 +59,8 @@ class OKRViewSet(viewsets.ModelViewSet):
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
@@ -62,11 +68,13 @@ class ActivityViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated(), IsAdminOrManager()]
+            return [permissions.AllowAny()]
+            #return [permissions.IsAuthenticated(), IsAdminOrManager()]
         return super().get_permissions()
 
     def perform_create(self, serializer):
@@ -80,7 +88,8 @@ class LogViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user.users)

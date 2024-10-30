@@ -84,6 +84,7 @@ function Header() {
             <li className="dropdown">
               {user ? (
                 <>
+                  <Link to='/dashboard/' onClick={handleLogout}>Dashboard</Link>
                   <Link to='#' onClick={handleLogout}>Salir</Link>
                 </>
               ) : (

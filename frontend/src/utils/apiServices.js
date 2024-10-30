@@ -105,3 +105,40 @@ export const changePassword = async (token, currentPassword, newPassword, newPas
     throw error;
   }
 };
+
+// Funciones para los proyectos
+export const getUserProjects = async (token, page = 1) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/okrs/projects/?page=${page}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-CSRFToken': getCsrfToken(),
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
+    console.log('Respuesta de getUserProjects:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener proyectos del usuario:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getProjectDetails = async (token, projectId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/okrs/projects/${projectId}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-CSRFToken': getCsrfToken(),
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
+    console.log(`Respuesta de getProjectDetails para proyecto ${projectId}:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error al obtener detalles del proyecto ${projectId}:`, error.response?.data || error.message);
+    throw error;
+  }
+};
