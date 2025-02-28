@@ -13,10 +13,10 @@ LOG_TYPES = (
     ('Task Created', "Task Created"),
     ('Task Updated', "Task Updated"),
     ('Project Created', "Project Created"),
+    ('Epic Created', "Epic Created"),
     ('Objective Created', "Objective Created"),
     ('OKR Created', "OKR Created"),
     ('Activity Created', "Activity Created"),
-    # Agrega más tipos de logs según sea necesario
 )
 
 PROGRESS_DICT = {'backlog': 0, 'in progress': 50, 'completed': 100}
@@ -33,13 +33,13 @@ class Project(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
     
     def __str__(self):
         return self.name
     
     def get_objectives_num(self):
-        return self.objectives.all().count()
+        return sum(epic.objectives.count() for epic in self.epics.all())
     
     def get_logs(self):
         return self.logs.all()
@@ -57,8 +57,25 @@ class ProjectMembers(models.Model):
     def __str__(self):
         return f"{self.user} in {self.project}"
 
+class Epic(models.Model):
+    project = models.ForeignKey(Project, related_name='epics', on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField(max_length=2000, blank=True)
+    owner = models.ForeignKey(Users, related_name='epics', on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created']
+    
+    def __str__(self):
+        return self.title
+    
+    def get_objectives_num(self):
+        return self.objectives.all().count()
+
 class Objective(models.Model):
-    project = models.ForeignKey(Project, related_name='objectives', on_delete=models.CASCADE)
+    epic = models.ForeignKey(Epic, related_name='objectives', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(max_length=2000, blank=True)
     owner = models.ForeignKey(Users, related_name='objectives', on_delete=models.CASCADE)
@@ -66,7 +83,7 @@ class Objective(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
     
     def __str__(self):
         return self.title
@@ -85,7 +102,7 @@ class OKR(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
     
     def __str__(self):
         return self.key_result
@@ -106,7 +123,7 @@ class Activity(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
     
     def __str__(self):
         return self.name
@@ -127,7 +144,7 @@ class Task(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
     
     def __str__(self):
         return f"Task-{self.id}"
@@ -150,6 +167,7 @@ class Task(models.Model):
 
 class Log(models.Model):
     project = models.ForeignKey(Project, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
+    epic = models.ForeignKey(Epic, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)  # Nuevo
     objective = models.ForeignKey(Objective, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
     okr = models.ForeignKey(OKR, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
     activity = models.ForeignKey(Activity, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
@@ -161,7 +179,7 @@ class Log(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
     
     def __str__(self):
         return f"Log-{self.id}"

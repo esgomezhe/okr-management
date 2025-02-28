@@ -1,12 +1,14 @@
 from rest_framework import viewsets, permissions
-from .models import Project, ProjectMembers, Objective, OKR, Activity, Task, Log, Comment
+from .models import Project, ProjectMembers, Epic, Objective, OKR, Activity, Task, Log, Comment
 from .serializers import (
-    ProjectSerializer, ProjectMembersSerializer, ObjectiveSerializer, OKRSerializer,
-    ActivitySerializer, TaskSerializer, LogSerializer, CommentSerializer
+    ProjectSerializer, ProjectMembersSerializer, EpicSerializer,
+    ObjectiveSerializer, OKRSerializer, ActivitySerializer, 
+    TaskSerializer, LogSerializer, CommentSerializer
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .permissions import IsAdminOrManager, IsOwnerOrReadOnly
+from users.models import Users
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -37,6 +39,16 @@ class ProjectMembersViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+# Nuevo ViewSet para Épicas
+class EpicViewSet(viewsets.ModelViewSet):
+    queryset = Epic.objects.all()
+    serializer_class = EpicSerializer
+    permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user.users)
 
 class ObjectiveViewSet(viewsets.ModelViewSet):
     queryset = Objective.objects.all()

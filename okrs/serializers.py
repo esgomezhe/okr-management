@@ -1,14 +1,32 @@
-# serializers.py
-
 from rest_framework import serializers
 from users.models import Users
-from .models import Project, ProjectMembers, Objective, OKR, Activity, Task, Log, Comment
+from .models import Project, ProjectMembers, Epic, Objective, OKR, Activity, Task, Log, Comment
 from users.serializers import UsersSerializer
 
 class UsersSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ['id', 'user', 'first_name', 'last_name', 'role']
+
+# Serializer para Épicas
+class EpicSerializer(serializers.ModelSerializer):
+    owner = UsersSimpleSerializer(read_only=True)
+    owner_id = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), write_only=True, source='owner'
+    )
+    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    objectives = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Epic
+        fields = [
+            'id', 'project', 'title', 'description', 'owner', 'owner_id',
+            'objectives', 'created', 'updated'
+        ]
+
+    def get_objectives(self, obj):
+        objectives = obj.objectives.all()
+        return ObjectiveSerializer(objectives, many=True, context=self.context).data
 
 class TaskSerializer(serializers.ModelSerializer):
     assignee = UsersSimpleSerializer(read_only=True)
@@ -32,7 +50,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         queryset=Users.objects.all(), write_only=True, source='owner'
     )
     okr = serializers.PrimaryKeyRelatedField(queryset=OKR.objects.all())
-    tasks = TaskSerializer(many=True, read_only=True)  # Anidado
+    tasks = TaskSerializer(many=True, read_only=True)
 
     class Meta:
         model = Activity
@@ -47,7 +65,7 @@ class OKRSerializer(serializers.ModelSerializer):
         queryset=Users.objects.all(), write_only=True, source='owner'
     )
     objective = serializers.PrimaryKeyRelatedField(queryset=Objective.objects.all())
-    activities = ActivitySerializer(many=True, read_only=True)  # Anidado
+    activities = ActivitySerializer(many=True, read_only=True)
 
     class Meta:
         model = OKR
@@ -62,13 +80,13 @@ class ObjectiveSerializer(serializers.ModelSerializer):
     owner_id = serializers.PrimaryKeyRelatedField(
         queryset=Users.objects.all(), write_only=True, source='owner'
     )
-    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-    okrs = OKRSerializer(many=True, read_only=True)  # Anidado
+    epic = serializers.PrimaryKeyRelatedField(queryset=Epic.objects.all())
+    okrs = OKRSerializer(many=True, read_only=True)
 
     class Meta:
         model = Objective
         fields = [
-            'id', 'project', 'title', 'description', 'owner', 'owner_id',
+            'id', 'epic', 'title', 'description', 'owner', 'owner_id',
             'okrs', 'created', 'updated'
         ]
 
@@ -78,13 +96,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     members_ids = serializers.PrimaryKeyRelatedField(
         queryset=Users.objects.all(), many=True, write_only=True, source='members'
     )
-    objectives = ObjectiveSerializer(many=True, read_only=True)  # Anidado
+    epics = EpicSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
         fields = [
             'id', 'name', 'description', 'created_by', 'members', 'members_ids',
-            'objectives',
+            'epics',  # Antes: objectives
             'start_date', 'end_date', 'color', 'created', 'updated'
         ]
 
@@ -121,6 +139,7 @@ class LogSerializer(serializers.ModelSerializer):
         queryset=Users.objects.all(), write_only=True, source='user'
     )
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), allow_null=True, required=False)
+    epic = serializers.PrimaryKeyRelatedField(queryset=Epic.objects.all(), allow_null=True, required=False)  # Nuevo
     objective = serializers.PrimaryKeyRelatedField(queryset=Objective.objects.all(), allow_null=True, required=False)
     okr = serializers.PrimaryKeyRelatedField(queryset=OKR.objects.all(), allow_null=True, required=False)
     activity = serializers.PrimaryKeyRelatedField(queryset=Activity.objects.all(), allow_null=True, required=False)
@@ -129,7 +148,7 @@ class LogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Log
         fields = [
-            'id', 'project', 'objective', 'okr', 'activity', 'task',
+            'id', 'project', 'epic', 'objective', 'okr', 'activity', 'task',
             'user', 'user_id', 'log_text', 'log_type', 'log_color', 'created'
         ]
 

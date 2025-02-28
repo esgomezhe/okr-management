@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, ProjectMembers, Objective, OKR, Activity, Task, Log, Comment
+from .models import Project, ProjectMembers, Epic, Objective, OKR, Activity, Task, Log, Comment
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
@@ -12,11 +12,17 @@ class ProjectMembersAdmin(admin.ModelAdmin):
     list_display = ('project', 'user', 'joined_at')
     search_fields = ('project__name', 'user__user__username', 'user__first_name', 'user__last_name')
 
-@admin.register(Objective)
-class ObjectiveAdmin(admin.ModelAdmin):
+@admin.register(Epic)
+class EpicAdmin(admin.ModelAdmin):
     list_display = ('title', 'project', 'owner', 'created', 'updated')
     search_fields = ('title', 'description')
-    list_filter = ('project', 'owner')
+    list_filter = ('project', 'owner', 'created')
+
+@admin.register(Objective)
+class ObjectiveAdmin(admin.ModelAdmin):
+    list_display = ('title', 'epic', 'owner', 'created', 'updated')
+    search_fields = ('title', 'description')
+    list_filter = ('epic', 'owner')
 
 @admin.register(OKR)
 class OKRAdmin(admin.ModelAdmin):
