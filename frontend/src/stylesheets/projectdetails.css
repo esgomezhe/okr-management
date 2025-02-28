@@ -1,15 +1,209 @@
 .project-details {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #f1f1f1;
-    border-radius: 6px;
-  }
-  
-  .project-details h4 {
-    margin-bottom: 5px;
-  }
-  
-  .project-details ul {
-    list-style-type: disc;
-    padding-left: 20px;
-  }
+  padding: 0;
+  background-color: var(--background-color);
+  border-top: 1px solid var(--border-color);
+}
+
+.objective-item {
+  margin-bottom: 0;
+  padding: 8px 0;
+}
+
+.objective-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 0 5px 20px;
+  cursor: pointer;
+}
+
+.objective-header:hover {
+  background-color: var(--hover-color);
+}
+
+.objective-title {
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.objective-description {
+  color: #666;
+  font-size: 14px;
+}
+
+.okrs-container {
+  padding-left: 0;
+}
+
+.okr-item {
+  margin-bottom: 0;
+  border-left: none;
+  padding-left: 0;
+}
+
+.okr-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 0 5px 40px;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.okr-header:hover {
+  background-color: var(--hover-color);
+}
+
+.okr-title {
+  font-weight: 500;
+  margin-right: 10px;
+  flex-grow: 1;
+}
+
+.okr-description {
+  display: none; /* Ocultar descripción para mantener el diseño limpio */
+}
+
+.okr-progress {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  width: 150px;
+  margin-right: 10px;
+}
+
+.progress-bar {
+  flex-grow: 1;
+  height: 4px;
+  background-color: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-right: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--in-progress-color);
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.activities-container {
+  padding-left: 0;
+}
+
+.activity-item {
+  margin-bottom: 0;
+  border-left: none;
+  padding-left: 0;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 0 5px 60px;
+  margin-bottom: 0;
+  background-color: rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+}
+
+.activity-header:hover {
+  background-color: var(--hover-color);
+}
+
+.activity-title {
+  font-weight: 500;
+  margin-right: 10px;
+  flex-grow: 1;
+}
+
+.activity-dates {
+  font-size: 12px;
+  color: #666;
+  margin-right: 10px;
+}
+
+.tasks-container {
+  padding-left: 80px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  padding: 5px 0 5px 100px;
+  border-radius: 0;
+}
+
+.task-item:hover {
+  background-color: var(--hover-color);
+}
+
+.task-title {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.task-status {
+  margin-right: 10px;
+  font-size: 12px;
+  padding: 2px 6px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.task-progress {
+  width: 80px;
+  margin-right: 10px;
+}
+
+.no-objectives,
+.no-okrs,
+.no-activities,
+.no-tasks {
+  padding: 5px 0 5px 20px;
+  color: #666;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.details-loading,
+.details-error,
+.details-empty {
+  padding: 10px 0 10px 40px;
+  color: #666;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.details-error {
+  color: #f44336;
+}
+
+/* Estilos específicos para mensajes de "No hay actividades disponibles" */
+.no-activities {
+  padding: 5px 0 5px 80px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Estilos específicos para mensajes de "No hay tareas disponibles" */
+.no-tasks {
+  padding: 5px 0 5px 100px;
+  color: #666;
+  font-style: italic;
+}
+
+.toggle-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 10px;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.toggle-icon.open {
+  transform: rotate(90deg);
+}

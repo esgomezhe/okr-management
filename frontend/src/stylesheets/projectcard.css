@@ -1,21 +1,76 @@
+.project-row {
+  border-bottom: 1px solid var(--border-color);
+}
+
 .project-card {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 15px;
-    width: 300px;
-    box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-  }
-  
-  .toggle-details-button {
-    margin-top: 10px;
-    padding: 5px 10px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-  }
-  
-  .toggle-details-button:hover {
-    background-color: #0056b3;
-  }
+  display: flex;
+  padding: 10px 0;
+  align-items: center;
+  width: 100%;
+}
+
+.project-card:hover {
+  background-color: var(--hover-color);
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-completed {
+  background-color: var(--completed-color);
+}
+
+.status-in-progress {
+  background-color: var(--in-progress-color);
+}
+
+.status-not-started {
+  background-color: var(--not-started-color);
+}
+
+.status-text {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.project-title {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.toggle-icon.open {
+  transform: rotate(90deg);
+}
+
+.project-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+}
+
+.action-button:hover {
+  color: #333;
+}

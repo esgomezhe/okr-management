@@ -1,26 +1,51 @@
-import React, { useState } from 'react';
-import ProjectDetails from './ProjectDetails';
-import '../stylesheets/projectcard.css';
+import { useState } from "react"
+import ProjectDetails from "./ProjectDetails"
+import "../stylesheets/projectcard.css"
 
 const ProjectCard = ({ project, token }) => {
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(false)
 
   const toggleDetails = () => {
-    setShowDetails(!showDetails);
-  };
+    setShowDetails(!showDetails)
+  }
 
-  console.log(`Proyecto ${project.id}:`, project); // Agregar esta línea
+  const getStatusClass = () => {
+    if (project.status === "completed") return "status-completed"
+    if (project.status === "in_progress") return "status-in-progress"
+    return "status-not-started"
+  }
+
+  const getStatusText = () => {
+    if (project.status === "completed") return "Completado"
+    if (project.status === "in_progress") return "En curso"
+    return "Sin empezar"
+  }
 
   return (
-    <div className="project-card">
-      <h3>{project.name}</h3>
-      <p>{project.description}</p>
-      <button onClick={toggleDetails} className="toggle-details-button">
-        {showDetails ? 'Ocultar Detalles' : 'Ver Detalles'}
-      </button>
+    <div className="project-row">
+      <div className="project-card">
+        <div className="column-estado">
+          <span className={`status-indicator ${getStatusClass()}`}></span>
+          <span className="status-text">{getStatusText()}</span>
+        </div>
+
+        <div className="column-proyecto">
+          <div className="project-title" onClick={toggleDetails}>
+            <span className={`toggle-icon ${showDetails ? "open" : ""}`}>▶</span>
+            <span className="project-name">{project.name}</span>
+          </div>
+        </div>
+
+        <div className="column-fecha">{project.deadline || "Sin fecha"}</div>
+
+        <div className="column-actions">
+          <button className="action-button">⋯</button>
+        </div>
+      </div>
+
       {showDetails && <ProjectDetails projectId={project.id} token={token} />}
     </div>
-  );
-};
+  )
+}
 
-export default ProjectCard;
+export default ProjectCard
