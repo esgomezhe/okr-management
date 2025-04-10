@@ -1,10 +1,10 @@
 import React, { useEffect, useContext } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from '../contexts/AuthContext'; // Importa AuthContext
+import { AuthContext } from '../contexts/AuthContext';
 import '../stylesheets/header.css';
 
 function Header() {
-  const { user, logout } = useContext(AuthContext); // Usa el contexto de autenticación
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +76,11 @@ function Header() {
       <div className='header__container'>
         <div className='header--logo'>
           <Link to='/'>
-            <img className='header--image' src={require('../img/wirk_logo.jpg')} alt="Cámara de Comercio de Cali" />
+            <img
+              className='header--image'
+              src={require('../img/wirk_logo.jpg')}
+              alt="Cámara de Comercio de Cali"
+            />
           </Link>
         </div>
         <nav id="navbar" className="navbar">
@@ -84,7 +88,7 @@ function Header() {
             <li className="dropdown">
               {user ? (
                 <>
-                  <Link to='/dashboard/' onClick={handleLogout}>Dashboard</Link>
+                  <Link to='/dashboard/'>Dashboard</Link>
                   <Link to='#' onClick={handleLogout}>Salir</Link>
                 </>
               ) : (
