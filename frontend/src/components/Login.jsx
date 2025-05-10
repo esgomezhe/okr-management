@@ -73,7 +73,7 @@ function Login() {
       const data = await loginUser(username, password);
       await login(data.access);
       setErrors({});
-      navigate('/dashboard'); // Navegar al Dashboard después del login
+      navigate('/dashboard/');
     } catch (error) {
       if (error.response && error.response.data.detail) {
         setErrors({ detail: error.response.data.detail });

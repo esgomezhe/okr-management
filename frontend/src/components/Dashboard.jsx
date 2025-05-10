@@ -1,63 +1,63 @@
-import { useEffect, useState, useContext } from "react"
-import { getUserProjects } from "../utils/apiServices"
-import { AuthContext } from "../contexts/AuthContext"
-import ProjectCard from "./ProjectCard"
-import "../stylesheets/dashboard.css"
+import { useEffect, useState, useContext } from "react";
+import { getUserProjects } from "../utils/apiServices";
+import { AuthContext } from "../contexts/AuthContext";
+import ProjectCard from "./ProjectCard";
+import "../stylesheets/dashboard.css";
 
 const Dashboard = () => {
-  const { user, loading } = useContext(AuthContext)
-  const [projects, setProjects] = useState([])
-  const [loadingProjects, setLoadingProjects] = useState(true)
-  const [error, setError] = useState(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const { user, loading } = useContext(AuthContext);
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (user && user.token) {
+      if (user) {
         try {
-          const data = await getUserProjects(user.token, page)
+          const data = await getUserProjects(page);
           if (data.results && Array.isArray(data.results)) {
-            setProjects(data.results)
-            setTotalPages(Math.ceil(data.count / data.results.length))
+            setProjects(data.results);
+            setTotalPages(Math.ceil(data.count / data.results.length));
           } else {
-            setProjects([])
-            setTotalPages(1)
+            setProjects([]);
+            setTotalPages(1);
           }
-          setLoadingProjects(false)
+          setLoadingProjects(false);
         } catch (err) {
-          console.error("Error al obtener proyectos:", err)
-          setError("No se pudieron cargar los proyectos.")
-          setLoadingProjects(false)
+          console.error("Error al obtener proyectos:", err);
+          setError("No se pudieron cargar los proyectos.");
+          setLoadingProjects(false);
         }
       }
-    }
+    };
 
-    fetchProjects()
-  }, [user, page])
+    fetchProjects();
+  }, [user, page]);
 
   const handleNextPage = () => {
-    if (page < totalPages) setPage((prev) => prev + 1)
-  }
+    if (page < totalPages) setPage((prev) => prev + 1);
+  };
 
   const handlePrevPage = () => {
-    if (page > 1) setPage((prev) => prev - 1)
-  }
+    if (page > 1) setPage((prev) => prev - 1);
+  };
 
   if (loading || loadingProjects) {
-    return <div className="loading-container">Cargando dashboard...</div>
+    return <div className="loading-container">Cargando dashboard...</div>;
   }
 
   if (error) {
-    return <div className="error-container">{error}</div>
+    return <div className="error-container">{error}</div>;
   }
 
   if (!Array.isArray(projects)) {
-    return <div className="error-container">Error: Datos de proyectos no válidos.</div>
+    return <div className="error-container">Error: Datos de proyectos no válidos.</div>;
   }
 
   if (projects.length === 0) {
-    return <div className="empty-container">No tienes proyectos asignados.</div>
+    return <div className="empty-container">No tienes proyectos asignados.</div>;
   }
 
   return (
@@ -84,7 +84,7 @@ const Dashboard = () => {
 
         <div className="projects-container">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} token={user.token} />
+            <ProjectCard key={project.id} project={project} />
           ))}
         </div>
       </div>
@@ -101,7 +101,7 @@ const Dashboard = () => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
