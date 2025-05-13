@@ -34,6 +34,7 @@ DJANGO_APPS = [
 PROJECT_APPS = [
     'okrs',
     'users',
+    'project',
 ]
 
 THIRD_PARTY_APPS = [
@@ -192,4 +193,6 @@ CORS_ALLOW_HEADERS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_NAME = "csrftoken"
-CSRF_TRUSTED_ORIGINS = config('DEV_CSRF_TRUSTED_ORIGINS', cast=Csv()) if DEBUG else config('PROD_CSRF_TRUSTED_ORIGINS', cast=Csv())
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']

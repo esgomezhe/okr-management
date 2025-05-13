@@ -66,13 +66,24 @@ class Epic(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['created']
+        ordering = ['-created']
+        verbose_name = 'Epic'
+        verbose_name_plural = 'Epics'
     
     def __str__(self):
         return self.title
     
     def get_objectives_num(self):
         return self.objectives.all().count()
+
+    def delete(self, *args, **kwargs):
+        try:
+            # Primero eliminamos todos los objetivos asociados
+            for objective in self.objectives.all():
+                objective.delete()
+            super().delete(*args, **kwargs)
+        except Exception as e:
+            raise Exception(f"Error al eliminar la épica: {str(e)}")
 
 class Objective(models.Model):
     epic = models.ForeignKey(Epic, related_name='objectives', on_delete=models.CASCADE)
@@ -92,25 +103,38 @@ class Objective(models.Model):
         return self.okrs.all().count()
 
 class OKR(models.Model):
-    objective = models.ForeignKey(Objective, related_name='okrs', on_delete=models.CASCADE)
-    key_result = models.CharField(max_length=255)
-    target_value = models.PositiveIntegerField()
-    current_value = models.PositiveIntegerField(default=0)
-    progress = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(100)])
-    owner = models.ForeignKey(Users, related_name='okrs', on_delete=models.CASCADE)
+    objective = models.ForeignKey(Objective, on_delete=models.CASCADE, related_name='okrs')
+    key_result = models.CharField(max_length=200)
+    current_value = models.IntegerField(default=0)
+    target_value = models.IntegerField(default=100)
+    progress = models.IntegerField(default=0)
+    owner = models.ForeignKey(Users, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['created']
-    
-    def __str__(self):
-        return self.key_result
-    
-    def update_progress(self):
-        if self.target_value > 0:
-            self.progress = min(100, (self.current_value / self.target_value) * 100)
+    tasks = models.ManyToManyField('Task', related_name='okrs', blank=True)
+
+    def calculate_progress(self):
+        activities = self.activities.all()
+        if not activities.exists():
+            self.progress = 0
+            self.current_value = 0
             self.save()
+            return 0
+        total_activities = activities.count()
+        completed_activities = activities.filter(tasks__status='completed').distinct().count()
+        progress = (completed_activities / total_activities) * 100 if total_activities > 0 else 0
+        self.progress = round(progress)
+        self.current_value = round(progress)
+        self.save()
+        return self.progress
+
+    def __str__(self):
+        return f"{self.key_result} - {self.progress}%"
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = 'OKR'
+        verbose_name_plural = 'OKRs'
 
 class Activity(models.Model):
     okr = models.ForeignKey(OKR, related_name='activities', on_delete=models.CASCADE)
@@ -123,13 +147,33 @@ class Activity(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['created']
+        ordering = ['-created']
+        verbose_name = 'Activity'
+        verbose_name_plural = 'Activities'
     
     def __str__(self):
         return self.name
     
     def get_tasks_num(self):
         return self.tasks.all().count()
+
+    def calculate_progress(self):
+        tasks = self.tasks.all()
+        if not tasks.exists():
+            return 0
+        total_tasks = tasks.count()
+        completed_tasks = tasks.filter(status='completed').count()
+        progress = (completed_tasks / total_tasks) * 100 if total_tasks > 0 else 0
+        return round(progress)
+
+    def delete(self, *args, **kwargs):
+        try:
+            # Primero eliminamos todas las tareas asociadas
+            for task in self.tasks.all():
+                task.delete()
+            super().delete(*args, **kwargs)
+        except Exception as e:
+            raise Exception(f"Error al eliminar la actividad: {str(e)}")
 
 class Task(models.Model):
     activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE)

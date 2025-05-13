@@ -101,10 +101,12 @@ class UsersReadSerializer(serializers.ModelSerializer):
     Incluye los campos de User anidados.
     """
     user = UserSerializer(read_only=True)
+    first_name = serializers.CharField(read_only=True)
+    last_name = serializers.CharField(read_only=True)
 
     class Meta:
         model = Users
-        fields = ['id', 'user', 'phone', 'city', 'avatar', 'role']
+        fields = ['id', 'user', 'first_name', 'last_name', 'phone', 'city', 'avatar', 'role']
 
 class UsersUpdateSerializer(serializers.ModelSerializer):
     """

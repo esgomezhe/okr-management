@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from users.views import UserDetailsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,10 +17,12 @@ urlpatterns = [
     # Incluir las URLs de cada aplicación
     path('api/users/', include('users.urls')),
     path('api/okrs/', include('okrs.urls')),
-
+    path('api/projects/', include('project.urls')),
+    
     # Autenticación JWT
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/users/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/users/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/users/me/', UserDetailsView.as_view(), name='user_details'),
 ]
 
 # Servir archivos de medios y estáticos en desarrollo

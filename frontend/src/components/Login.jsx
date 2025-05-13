@@ -2,8 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser, loginUser } from '../utils/apiServices';
 import { AuthContext } from '../contexts/AuthContext';
-import thankYouImage from '../img/grow-you-business.png';
-import '../stylesheets/results.css';
+import '../stylesheets/login.css';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -18,7 +17,7 @@ function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [errors, setErrors] = useState({});
   const { user, login, loading } = useContext(AuthContext);
-  const navigate = useNavigate(); // Hook para navegar
+  const navigate = useNavigate();
 
   // Handlers para los campos del formulario
   const handleUsernameChange = (event) => {
@@ -73,12 +72,11 @@ function Login() {
       const data = await loginUser(username, password);
       await login(data.access);
       setErrors({});
-      navigate('/dashboard/');
+      navigate('/dashboard/missions');
     } catch (error) {
       if (error.response && error.response.data.detail) {
         setErrors({ detail: error.response.data.detail });
       } else if (error.response && error.response.data) {
-        // Manejar errores por campo
         setErrors(error.response.data);
       } else {
         setErrors({ detail: 'Error al iniciar sesión. Inténtalo de nuevo.' });
@@ -88,7 +86,6 @@ function Login() {
 
   // Función para manejar el registro de usuario
   const handleRegister = async () => {
-    // Validación básica en el frontend
     if (password !== password2) {
       setErrors({ detail: 'Las contraseñas no coinciden.' });
       return;
@@ -106,11 +103,9 @@ function Login() {
         password,
         password2
       );
-      // Después de registrarse, iniciar sesión automáticamente
       await handleLogin();
     } catch (error) {
       if (error.response && error.response.data) {
-        // Manejar errores por campo
         setErrors(error.response.data);
       } else {
         setErrors({ detail: 'Error al registrar usuario. Inténtalo de nuevo.' });
@@ -119,33 +114,32 @@ function Login() {
   };
 
   if (loading) {
-    return <div>Cargando...</div>;
-  }
-
-  if (user) {
     return (
-      <section className="thank_you">
-        <div className='thank_you__image'>
-          <img src={thankYouImage} alt="Thank You"/>
+      <div className="login-container">
+        <div className="login-form-container">
+          <div className="login-header">
+            <h2>Cargando...</h2>
+          </div>
         </div>
-        <div className="thank_you__text">
-          <h1>Bienvenido a la herramienta de OKRs de Wirk Tools!, {user?.user.first_name || 'Usuario'}!</h1>
-          <h3>Es para nosotros un gusto poder ayudarte en tu crecimiento empresarial.</h3>
-          <p>Dale un impulso a tu trayectoria con solo un clic. Empieza tu prueba en nuestras herramientas y abre la puerta a un mundo de oportunidades digitales.</p>
-          <p>Regresa a la página principal: <Link className='thank_you__link' to='/'>Home</Link></p>
-        </div>
-      </section>
+      </div>
     );
   }
 
-  return (
-    <div className="lineabase">
-      {!user && (
-        <div className="document-check">
-          <form onSubmit={handleSubmit} className="document-check-form">
-            <h2>{isRegister ? 'Registrar' : 'Iniciar Sesión'}</h2>
+  if (user) {
+    navigate('/dashboard/missions');
+    return null;
+  }
 
-            {/* Campo de Usuario */}
+  return (
+    <div className="login-container">
+      <div className="login-form-container">
+        <div className="login-header">
+          <h2>{isRegister ? 'Crear Cuenta' : 'Iniciar Sesión'}</h2>
+          <p>{isRegister ? 'Completa el formulario para registrarte' : 'Ingresa tus credenciales para continuar'}</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
             <label htmlFor="username" className="form-label">Usuario</label>
             <input
               type="text"
@@ -155,12 +149,13 @@ function Login() {
               onChange={handleUsernameChange}
               required
               className="form-input"
+              placeholder="Ingresa tu usuario"
             />
+          </div>
 
-            {/* Campos de Registro */}
-            {isRegister && (
-              <>
-                {/* Campo de Correo Electrónico */}
+          {isRegister && (
+            <>
+              <div className="form-group">
                 <label htmlFor="email" className="form-label">Correo Electrónico</label>
                 <input
                   type="email"
@@ -170,9 +165,11 @@ function Login() {
                   onChange={handleEmailChange}
                   required
                   className="form-input"
+                  placeholder="Ingresa tu correo electrónico"
                 />
+              </div>
 
-                {/* Campo de Nombre */}
+              <div className="form-group">
                 <label htmlFor="first_name" className="form-label">Nombre</label>
                 <input
                   type="text"
@@ -182,9 +179,11 @@ function Login() {
                   onChange={handleFirstNameChange}
                   required
                   className="form-input"
+                  placeholder="Ingresa tu nombre"
                 />
+              </div>
 
-                {/* Campo de Apellido */}
+              <div className="form-group">
                 <label htmlFor="last_name" className="form-label">Apellido</label>
                 <input
                   type="text"
@@ -194,9 +193,11 @@ function Login() {
                   onChange={handleLastNameChange}
                   required
                   className="form-input"
+                  placeholder="Ingresa tu apellido"
                 />
+              </div>
 
-                {/* Campo de Teléfono */}
+              <div className="form-group">
                 <label htmlFor="phone" className="form-label">Teléfono</label>
                 <input
                   type="tel"
@@ -206,9 +207,11 @@ function Login() {
                   onChange={handlePhoneChange}
                   required
                   className="form-input"
+                  placeholder="Ingresa tu teléfono"
                 />
+              </div>
 
-                {/* Campo de Ciudad */}
+              <div className="form-group">
                 <label htmlFor="city" className="form-label">Ciudad</label>
                 <input
                   type="text"
@@ -218,9 +221,11 @@ function Login() {
                   onChange={handleCityChange}
                   required
                   className="form-input"
+                  placeholder="Ingresa tu ciudad"
                 />
+              </div>
 
-                {/* Campo de Rol */}
+              <div className="form-group">
                 <label htmlFor="role" className="form-label">Rol</label>
                 <select
                   id="role"
@@ -233,10 +238,10 @@ function Login() {
                   <option value="employee">Empleado</option>
                   <option value="manager">Gerente</option>
                   <option value="admin">Administrador</option>
-                  {/* Añade más roles según tus necesidades */}
                 </select>
+              </div>
 
-                {/* Campo de Confirmar Contraseña */}
+              <div className="form-group">
                 <label htmlFor="password2" className="form-label">Confirmar Contraseña</label>
                 <input
                   type="password"
@@ -246,11 +251,13 @@ function Login() {
                   onChange={handlePassword2Change}
                   required
                   className="form-input"
+                  placeholder="Confirma tu contraseña"
                 />
-              </>
-            )}
+              </div>
+            </>
+          )}
 
-            {/* Campo de Contraseña */}
+          <div className="form-group">
             <label htmlFor="password" className="form-label">Contraseña</label>
             <input
               type="password"
@@ -260,37 +267,35 @@ function Login() {
               onChange={handlePasswordChange}
               required
               className="form-input"
+              placeholder="Ingresa tu contraseña"
             />
+          </div>
 
-            {/* Mostrar Errores */}
-            {errors.detail && (
-              <div className="error-container">
-                <p className="error-message">{errors.detail}</p>
-              </div>
-            )}
+          {errors.detail && (
+            <div className="error-container">
+              <p className="error-message">{errors.detail}</p>
+            </div>
+          )}
 
-            {/* Botón de Envío */}
-            <button type="submit" className="form-submit-button">
-              {isRegister ? 'Registrar' : 'Iniciar Sesión'}
-            </button>
+          <button type="submit" className="form-submit-button">
+            {isRegister ? 'Registrarse' : 'Iniciar Sesión'}
+          </button>
 
-            {/* Botón para alternar entre Registro e Inicio de Sesión */}
-            {!isRegister && (
-              <Link to="/forgot-password/" className="forgot-password-link">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            )}
+          {!isRegister && (
+            <Link to="/forgot-password/" className="forgot-password-link">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          )}
 
-            <button
-              type="button"
-              onClick={() => setIsRegister(!isRegister)}
-              className="form-submit-button secondary-button"
-            >
-              {isRegister ? '¿Ya tienes una cuenta? Inicia sesión' : '¿No tienes una cuenta? Regístrate'}
-            </button>
-          </form>
-        </div>
-      )}
+          <button
+            type="button"
+            onClick={() => setIsRegister(!isRegister)}
+            className="form-submit-button secondary-button"
+          >
+            {isRegister ? '¿Ya tienes una cuenta? Inicia sesión' : '¿No tienes una cuenta? Regístrate'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

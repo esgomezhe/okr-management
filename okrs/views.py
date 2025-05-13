@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .permissions import IsAdminOrManager, IsOwnerOrReadOnly
 from users.models import Users
+from rest_framework import status
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -44,11 +45,33 @@ class ProjectMembersViewSet(viewsets.ModelViewSet):
 class EpicViewSet(viewsets.ModelViewSet):
     queryset = Epic.objects.all()
     serializer_class = EpicSerializer
-    permission_classes = [permissions.AllowAny]
-    #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
+
+    def get_queryset(self):
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            return Epic.objects.filter(project_id=project_id).prefetch_related('objectives')
+        return Epic.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            epic_id = kwargs.get('pk')
+            epic = Epic.objects.get(id=epic_id)
+            epic.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Epic.DoesNotExist:
+            return Response(
+                {'detail': 'No Epic matches the given query.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class ObjectiveViewSet(viewsets.ModelViewSet):
     queryset = Objective.objects.all()
@@ -56,8 +79,31 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
 
+    def get_queryset(self):
+        epic_id = self.request.query_params.get('epic')
+        if epic_id:
+            return Objective.objects.filter(epic_id=epic_id)
+        return Objective.objects.all()
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            objective_id = kwargs.get('pk')
+            objective = Objective.objects.get(id=objective_id)
+            objective.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Objective.DoesNotExist:
+            return Response(
+                {'detail': 'No Objective matches the given query.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class OKRViewSet(viewsets.ModelViewSet):
     queryset = OKR.objects.all()
@@ -65,32 +111,90 @@ class OKRViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
 
+    def get_queryset(self):
+        objective_id = self.request.query_params.get('objective')
+        if objective_id:
+            return OKR.objects.filter(objective_id=objective_id)
+        return OKR.objects.all()
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            okr_id = kwargs.get('pk')
+            okr = OKR.objects.get(id=okr_id)
+            okr.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except OKR.DoesNotExist:
+            return Response(
+                {'detail': 'No OKR matches the given query.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
-    permission_classes = [permissions.AllowAny]
-    #permission_classes = [permissions.IsAuthenticated, IsAdminOrManager, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
 
+    def get_queryset(self):
+        queryset = Activity.objects.all()
+        okr_id = self.request.query_params.get('okr', None)
+        if okr_id is not None:
+            queryset = queryset.filter(okr_id=okr_id)
+        return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [permissions.AllowAny]
-    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.AllowAny()]
-            #return [permissions.IsAuthenticated(), IsAdminOrManager()]
-        return super().get_permissions()
+    def get_queryset(self):
+        activity_id = self.request.query_params.get('activity')
+        if activity_id:
+            return Task.objects.filter(activity_id=activity_id)
+        return Task.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save()
+        task = serializer.save()
+        if task.activity:
+            task.activity.calculate_progress()
+            if task.activity.okr:
+                task.activity.okr.calculate_progress()
+
+    def perform_update(self, serializer):
+        task = serializer.save()
+        if task.activity:
+            task.activity.calculate_progress()
+            if task.activity.okr:
+                task.activity.okr.calculate_progress()
+
+    def perform_destroy(self, instance):
+        activity = instance.activity
+        super().perform_destroy(instance)
+        if activity:
+            activity.calculate_progress()
+            if activity.okr:
+                activity.okr.calculate_progress()
 
 class LogViewSet(viewsets.ModelViewSet):
     queryset = Log.objects.all()

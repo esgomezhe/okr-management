@@ -50,24 +50,28 @@ class LogoutView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             refresh_token = request.data.get('refresh')
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({'detail': 'Cerraste sesión exitosamente.'}, status=status.HTTP_205_RESET_CONTENT)
-        except TokenError:
-            return Response({'detail': 'Token inválido o ya ha sido invalidado.'}, status=status.HTTP_400_BAD_REQUEST)
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            return Response({'detail': 'Cerraste sesión exitosamente.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            # Si hay algún error, aún así permitimos el cierre de sesión
+            return Response({'detail': 'Cerraste sesión exitosamente.'}, status=status.HTTP_200_OK)
 
 class UserDetailsView(APIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = UsersReadSerializer
 
     def get(self, request, *args, **kwargs):
-        user = request.user
         try:
-            profile = user.users  # Asumiendo que el modelo Users está relacionado con User mediante OneToOneField
+            profile = request.user.users
+            serializer = self.serializer_class(profile)
+            return Response(serializer.data)
         except Users.DoesNotExist:
-            return Response({'detail': 'Perfil de usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = UsersReadSerializer(profile)
-        return Response(serializer.data)
+            return Response(
+                {'detail': 'Perfil de usuario no encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class PasswordResetRequestView(generics.GenericAPIView):
     permission_classes = [AllowAny]

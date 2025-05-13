@@ -25,13 +25,21 @@ class EpicSerializer(serializers.ModelSerializer):
         ]
 
     def get_objectives(self, obj):
-        objectives = obj.objectives.all()
+        objectives = Objective.objects.filter(epic=obj)
+        if not objectives.exists():
+            return []
         return ObjectiveSerializer(objectives, many=True, context=self.context).data
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if not representation['objectives']:
+            representation['objectives'] = []
+        return representation
 
 class TaskSerializer(serializers.ModelSerializer):
     assignee = UsersSimpleSerializer(read_only=True)
     assignee_id = serializers.PrimaryKeyRelatedField(
-        queryset=Users.objects.all(), write_only=True, source='assignee'
+        queryset=Users.objects.all(), write_only=True, source='assignee', required=False
     )
     activity = serializers.PrimaryKeyRelatedField(queryset=Activity.objects.all())
     parent_task = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all(), allow_null=True, required=False)
@@ -44,6 +52,15 @@ class TaskSerializer(serializers.ModelSerializer):
             'created', 'updated'
         ]
 
+    def create(self, validated_data):
+        return Task.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
 class ActivitySerializer(serializers.ModelSerializer):
     owner = UsersSimpleSerializer(read_only=True)
     owner_id = serializers.PrimaryKeyRelatedField(
@@ -51,13 +68,32 @@ class ActivitySerializer(serializers.ModelSerializer):
     )
     okr = serializers.PrimaryKeyRelatedField(queryset=OKR.objects.all())
     tasks = TaskSerializer(many=True, read_only=True)
+    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Activity
         fields = [
             'id', 'okr', 'name', 'description', 'owner', 'owner_id',
-            'start_date', 'end_date', 'tasks', 'created', 'updated'
+            'start_date', 'end_date', 'tasks', 'progress', 'created', 'updated'
         ]
+        read_only_fields = ['owner', 'created', 'updated', 'progress']
+
+    def get_progress(self, obj):
+        return obj.calculate_progress()
+
+    def create(self, validated_data):
+        activity = Activity.objects.create(**validated_data)
+        activity.calculate_progress()
+        return activity
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.end_date = validated_data.get('end_date', instance.end_date)
+        instance.save()
+        instance.calculate_progress()
+        return instance
 
 class OKRSerializer(serializers.ModelSerializer):
     owner = UsersSimpleSerializer(read_only=True)
@@ -66,14 +102,26 @@ class OKRSerializer(serializers.ModelSerializer):
     )
     objective = serializers.PrimaryKeyRelatedField(queryset=Objective.objects.all())
     activities = ActivitySerializer(many=True, read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)
 
     class Meta:
         model = OKR
         fields = [
-            'id', 'objective', 'key_result', 'target_value',
-            'current_value', 'progress', 'owner', 'owner_id',
-            'activities', 'created', 'updated'
+            'id', 'objective', 'key_result', 'current_value', 'target_value', 'progress', 'owner', 'owner_id',
+            'activities', 'created', 'updated', 'tasks'
         ]
+        read_only_fields = ['current_value', 'target_value', 'progress', 'owner', 'created', 'updated']
+
+    def create(self, validated_data):
+        okr = OKR.objects.create(**validated_data)
+        okr.calculate_progress()
+        return okr
+
+    def update(self, instance, validated_data):
+        instance.key_result = validated_data.get('key_result', instance.key_result)
+        instance.save()
+        instance.calculate_progress()
+        return instance
 
 class ObjectiveSerializer(serializers.ModelSerializer):
     owner = UsersSimpleSerializer(read_only=True)

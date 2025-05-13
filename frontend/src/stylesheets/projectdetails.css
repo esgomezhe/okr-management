@@ -1,143 +1,786 @@
 .project-details {
-  padding: 0;
-  background-color: var(--background-color);
-  border-top: 1px solid var(--border-color);
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.epic-item {
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
+.details-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #eaeaea;
 }
 
+.details-header h1 {
+  font-size: 24px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.project-description {
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Estilos para las listas */
+.epics-list,
+.objectives-list,
+.okrs-list,
+.activities-list,
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Estilos para los items */
+.epic-item,
+.objective-item,
+.okr-item,
+.activity-item,
+.task-item {
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.epic-item:hover,
+.objective-item:hover,
+.okr-item:hover,
+.activity-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los headers */
 .epic-header,
 .objective-header,
 .okr-header,
-.activity-header,
-.task-item {
+.activity-header {
+  padding: 16px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 8px 0 8px 10px;
-  cursor: pointer;
+  gap: 12px;
+  background: #fff;
+  border-radius: 6px;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.epic-header:hover,
-.objective-header:hover,
-.okr-header:hover,
-.activity-header:hover,
-.task-item:hover {
-  background-color: var(--hover-color);
+.epic-header h2,
+.objective-header h2 {
+  font-size: 20px;
+  color: #2c3e50;
+  margin: 0;
+  flex: 1;
 }
 
-.level-label {
-  font-weight: 600;
-  margin-right: 8px;
-  font-size: 14px;
-  color: #555;
+.okr-header h3,
+.activity-header h3 {
+  font-size: 18px;
+  color: #34495e;
+  margin: 0;
+  flex: 1;
 }
 
-.epic-title,
-.objective-title,
-.okr-title,
-.activity-title,
-.task-title {
-  font-weight: 500;
-  margin-right: 10px;
+/* Estilos para el ícono de toggle */
+.toggle-icon {
+  font-size: 12px;
+  color: #666;
+  transition: transform 0.3s ease;
 }
 
-.objective-description {
+.toggle-icon.open {
+  transform: rotate(90deg);
+}
+
+/* Estilos para el contenido expandible */
+.epic-content,
+.objective-content,
+.okr-content,
+.activity-content {
+  padding: 16px;
+  background: #fff;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Estilos para las descripciones */
+.epic-description,
+.objective-description,
+.activity-description {
   color: #666;
   font-size: 14px;
-  margin-left: 10px;
+  line-height: 1.5;
+  margin-bottom: 16px;
 }
 
-.objectives-container {
-  padding-left: 20px;
+/* Estilos para las fechas */
+.activity-dates {
+  font-size: 14px;
+  color: #666;
+  background: #f1f3f5;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-.okrs-container {
-  padding-left: 20px;
+/* Estilos para las tareas */
+.task-item {
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
 }
 
-.activities-container {
-  padding-left: 20px;
-}
-
-.tasks-container {
-  padding-left: 20px;
-}
-
-.okr-progress,
-.task-progress {
+.task-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-left: auto;
+  margin-bottom: 8px;
+}
+
+.task-header h4 {
+  font-size: 16px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.backlog {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.status-badge.in_progress {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge.completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Estilos para las barras de progreso */
+.progress-container {
+  margin-top: 8px;
 }
 
 .progress-bar {
-  width: 100px;
-  height: 4px;
-  background-color: var(--border-color);
-  border-radius: 2px;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
   overflow: hidden;
-  margin-right: 5px;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: var(--in-progress-color);
+  background: #4caf50;
+  transition: width 0.3s ease;
 }
 
 .progress-text {
   font-size: 12px;
   color: #666;
-  white-space: nowrap;
+  margin-top: 4px;
+  display: block;
 }
 
-.activity-dates {
-  font-size: 12px;
-  color: #666;
-  margin-left: 10px;
-}
-
-.task-status {
-  margin-left: 10px;
-  font-size: 12px;
-  padding: 2px 6px;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.no-objectives,
-.no-okrs,
-.no-activities,
-.no-tasks {
-  padding: 5px 0 5px 20px;
-  color: #666;
-  font-style: italic;
-  font-size: 14px;
-}
-
+/* Estilos para estados de carga y error */
 .details-loading,
 .details-error,
 .details-empty {
-  padding: 10px 0 10px 40px;
+  padding: 20px;
+  text-align: center;
   color: #666;
-  font-style: italic;
-  font-size: 14px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin: 20px 0;
 }
 
 .details-error {
-  color: #f44336;
+  color: #dc3545;
+  background: #f8d7da;
 }
 
-.toggle-icon {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 10px;
-  transition: transform 0.2s;
+/* Animaciones */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.epic-content,
+.objective-content,
+.okr-content,
+.activity-content {
+  animation: slideDown 0.3s ease;
+}
+
+.epics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.epic-add-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.epic-add-btn:hover {
+  background: #1251a3;
+}
+
+.epic-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.epic-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.epic-edit-btn {
+  background: #e3f0fa;
+  color: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.epic-edit-btn:hover {
+  background: #1976d2;
+  color: #fff;
+}
+
+.epic-delete-btn {
+  background: #fdeaea;
+  color: #d32f2f;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.epic-delete-btn:hover {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.epic-loading, .epic-error {
+  margin-bottom: 1rem;
+  color: #d32f2f;
+  font-size: 1rem;
+}
+
+/* Estilos para objetivos */
+.objectives-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.objective-add-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.objective-add-btn:hover {
+  background: #1565c0;
+}
+
+.objective-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.objective-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.objective-edit-btn {
+  background: #e3f0fa;
+  color: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.objective-edit-btn:hover {
+  background: #1976d2;
+  color: #fff;
+}
+
+.objective-delete-btn {
+  background: #fdeaea;
+  color: #d32f2f;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.objective-delete-btn:hover {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.objective-loading, .objective-error {
+  margin-bottom: 1rem;
+  color: #d32f2f;
+  font-size: 1rem;
+}
+
+/* Estilos para OKRs */
+.okrs-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.okrs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.okr-add-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.toggle-icon.open {
-  transform: rotate(90deg);
+.okr-add-btn:hover {
+  background-color: #218838;
+}
+
+.okr-item {
+  background-color: white;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.okr-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.okr-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.okr-edit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.okr-edit-btn:hover {
+  background-color: #0056b3;
+}
+
+.okr-delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.okr-delete-btn:hover {
+  background-color: #c82333;
+}
+
+.okr-loading {
+  text-align: center;
+  padding: 1rem;
+  color: #6c757d;
+}
+
+.okr-error {
+  color: #dc3545;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f8d7da;
+  border-radius: 4px;
+}
+
+.okr-progress {
+  margin: 1rem 0;
+}
+
+.okr-tasks {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.okr-tasks h5 {
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #6c757d;
+}
+
+.task-item.completed {
+  border-left-color: #28a745;
+}
+
+.task-item.in_progress {
+  border-left-color: #007bff;
+}
+
+.task-item.backlog {
+  border-left-color: #6c757d;
+}
+
+.task-title {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.task-status {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.no-tasks {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Modal reutiliza los estilos globales de modal.css */
+
+.form-input.disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.info-box {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #495057;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.form-text {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Estilos para Actividades */
+.activities-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.activities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.activity-add-btn {
+    padding: 0.5rem 1rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.activity-add-btn:hover {
+    background-color: #218838;
+}
+
+.activity-item {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.activity-edit-btn,
+.activity-delete-btn {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.activity-edit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.activity-edit-btn:hover {
+    background-color: #0056b3;
+}
+
+.activity-delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.activity-delete-btn:hover {
+    background-color: #c82333;
+}
+
+.activity-dates {
+    display: flex;
+    gap: 1rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.activity-progress {
+    margin-top: 0.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.activity-loading {
+    text-align: center;
+    padding: 1rem;
+    color: #6c757d;
+}
+
+.activity-error {
+    text-align: center;
+    padding: 1rem;
+    color: #dc3545;
+    background-color: #f8d7da;
+    border-radius: 4px;
+}
+
+/* Estilos para el Modal de Actividades */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-textarea {
+    resize: vertical;
+}
+
+.error-message {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.cancel-button,
+.submit-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cancel-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
+.submit-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.submit-button:hover {
+    background-color: #0056b3;
+}
+
+.submit-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
 }

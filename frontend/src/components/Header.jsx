@@ -1,11 +1,13 @@
 import React, { useEffect, useContext } from 'react';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from '../contexts/AuthContext';
+import { logoutUser } from '../utils/apiServices';
 import '../stylesheets/header.css';
 
 function Header() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const navbar = document.getElementById('navbar');
@@ -66,9 +68,21 @@ function Header() {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      logout();
+      navigate('/login/');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      // Aún así, forzamos el cierre de sesión local
     logout();
-    navigate('/user/');
+      navigate('/login/');
+    }
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
@@ -85,16 +99,23 @@ function Header() {
         </div>
         <nav id="navbar" className="navbar">
           <ul>
-            <li className="dropdown">
               {user ? (
                 <>
-                  <Link to='/dashboard/'>Dashboard</Link>
+                <li className={`nav-item ${isActive('/dashboard/missions')}`}>
+                  <Link to='/dashboard/missions'>Misiones</Link>
+                </li>
+                <li className={`nav-item ${isActive('/dashboard/projects')}`}>
+                  <Link to='/dashboard/projects'>Proyectos</Link>
+                </li>
+                <li className="dropdown">
                   <Link to='#' onClick={handleLogout}>Salir</Link>
+                </li>
                 </>
               ) : (
+              <li className="dropdown">
                 <Link to='/login/'>Iniciar Sesión</Link>
+              </li>
               )}
-            </li>
           </ul>
           <i className="bi bi-list mobile-nav-toggle"></i>
         </nav>

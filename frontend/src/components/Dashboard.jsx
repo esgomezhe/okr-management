@@ -1,104 +1,148 @@
-import { useEffect, useState, useContext } from "react";
-import { getUserProjects } from "../utils/apiServices";
-import { AuthContext } from "../contexts/AuthContext";
-import ProjectCard from "./ProjectCard";
-import "../stylesheets/dashboard.css";
+import React, { useState, useEffect } from 'react';
+import { dashboardService } from '../utils/apiServices';
+import '../stylesheets/dashboard.css';
 
 const Dashboard = () => {
-  const { user, loading } = useContext(AuthContext);
-  const [projects, setProjects] = useState([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      if (user) {
-        try {
-          const data = await getUserProjects(page);
-          if (data.results && Array.isArray(data.results)) {
-            setProjects(data.results);
-            setTotalPages(Math.ceil(data.count / data.results.length));
-          } else {
-            setProjects([]);
-            setTotalPages(1);
-          }
-          setLoadingProjects(false);
-        } catch (err) {
-          console.error("Error al obtener proyectos:", err);
-          setError("No se pudieron cargar los proyectos.");
-          setLoadingProjects(false);
-        }
-      }
-    };
+    loadDashboardStats();
+  }, []);
 
-    fetchProjects();
-  }, [user, page]);
-
-  const handleNextPage = () => {
-    if (page < totalPages) setPage((prev) => prev + 1);
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const response = await dashboardService.getStats();
+      setStats(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Error al cargar las estadísticas');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePrevPage = () => {
-    if (page > 1) setPage((prev) => prev - 1);
-  };
-
-  if (loading || loadingProjects) {
-    return <div className="loading-container">Cargando dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="error-container">{error}</div>;
-  }
-
-  if (!Array.isArray(projects)) {
-    return <div className="error-container">Error: Datos de proyectos no válidos.</div>;
-  }
-
-  if (projects.length === 0) {
-    return <div className="empty-container">No tienes proyectos asignados.</div>;
-  }
+  if (loading) return <div className="loading">Cargando dashboard...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Planificador de proyectos</h2>
-        <p className="dashboard-description">
-          Usa esta plantilla para hacer un seguimiento de todos tus proyectos y tareas. Abre cada proyecto haciendo clic
-          en el desplegable para ver las subtareas. Asigna fechas límite y actualiza los estados para estar al tanto de
-          tus proyectos.
-        </p>
-        <div className="dashboard-actions">
-          <button className="new-project-btn">Nuevo</button>
+      <h2>Dashboard</h2>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h3>Misiones</h3>
+          <div className="stat-value">{stats.missions_count}</div>
+          <div className="stat-details">
+            <div className="stat-item">
+              <span className="label">Activas</span>
+              <span className="value">{stats.active_missions}</span>
+            </div>
+            <div className="stat-item">
+              <span className="label">Completadas</span>
+              <span className="value">{stats.completed_missions}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <h3>Objetivos</h3>
+          <div className="stat-value">{stats.objectives_count}</div>
+          <div className="stat-details">
+            <div className="stat-item">
+              <span className="label">Activos</span>
+              <span className="value">{stats.active_objectives}</span>
+            </div>
+            <div className="stat-item">
+              <span className="label">Completados</span>
+              <span className="value">{stats.completed_objectives}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <h3>Resultados Clave</h3>
+          <div className="stat-value">{stats.key_results_count}</div>
+          <div className="stat-details">
+            <div className="stat-item">
+              <span className="label">Activos</span>
+              <span className="value">{stats.active_key_results}</span>
+            </div>
+            <div className="stat-item">
+              <span className="label">Completados</span>
+              <span className="value">{stats.completed_key_results}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <h3>Actividades</h3>
+          <div className="stat-value">{stats.activities_count}</div>
+          <div className="stat-details">
+            <div className="stat-item">
+              <span className="label">Activas</span>
+              <span className="value">{stats.active_activities}</span>
+            </div>
+            <div className="stat-item">
+              <span className="label">Completadas</span>
+              <span className="value">{stats.completed_activities}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <h3>Tareas</h3>
+          <div className="stat-value">{stats.tasks_count}</div>
+          <div className="stat-details">
+            <div className="stat-item">
+              <span className="label">Activas</span>
+              <span className="value">{stats.active_tasks}</span>
+            </div>
+            <div className="stat-item">
+              <span className="label">Completadas</span>
+              <span className="value">{stats.completed_tasks}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <h3>Usuarios</h3>
+          <div className="stat-value">{stats.users_count}</div>
+          <div className="stat-details">
+            <div className="stat-item">
+              <span className="label">Activos</span>
+              <span className="value">{stats.active_users}</span>
+            </div>
+            <div className="stat-item">
+              <span className="label">Inactivos</span>
+              <span className="value">{stats.inactive_users}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="projects-table">
-        <div className="table-header">
-          <div className="column-estado">Estado</div>
-          <div className="column-proyecto">Proyecto</div>
-          <div className="column-fecha">Fecha límite</div>
-          <div className="column-actions"></div>
-        </div>
-
-        <div className="projects-container">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+      <div className="recent-activity">
+        <h3>Actividad Reciente</h3>
+        <div className="activity-list">
+          {stats.recent_activity.map((activity) => (
+            <div key={activity.id} className="activity-item">
+              <div className="activity-icon">
+                {activity.type === 'create' && '➕'}
+                {activity.type === 'update' && '✏️'}
+                {activity.type === 'delete' && '🗑️'}
+              </div>
+              <div className="activity-content">
+                <p className="activity-message">{activity.message}</p>
+                <span className="activity-time">
+                  {new Date(activity.created_at).toLocaleString()}
+                </span>
+              </div>
+            </div>
           ))}
         </div>
-      </div>
-
-      <div className="pagination">
-        <button onClick={handlePrevPage} disabled={page === 1}>
-          Anterior
-        </button>
-        <span>
-          Página {page} de {totalPages}
-        </span>
-        <button onClick={handleNextPage} disabled={page === totalPages}>
-          Siguiente
-        </button>
       </div>
     </div>
   );
