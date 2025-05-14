@@ -11,7 +11,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
   const [epicModal, setEpicModal] = useState({ open: false, mode: 'create', epic: null })
   const [epicLoading, setEpicLoading] = useState(false)
   const [epicError, setEpicError] = useState(null)
-  const [objectives, setObjectives] = useState({})
+  const [objectives, setObjectives] = useState(type === 'project' ? [] : {})
   const [objectiveModal, setObjectiveModal] = useState({ open: false, mode: 'create', objective: null, epicId: null })
   const [objectiveLoading, setObjectiveLoading] = useState(false)
   const [objectiveError, setObjectiveError] = useState(null)
@@ -34,6 +34,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         const data = await getProjectDetails(projectId, type)
         setDetails(data)
         setLoading(false)
+        if (type === "project" && data.objectives) {
+          setObjectives(data.objectives)
+        }
       } catch (err) {
         setError(`No se pudieron cargar los detalles del ${type}.`)
         setLoading(false)
@@ -84,12 +87,23 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     const fetchOKRs = async () => {
       try {
         const okrsData = {}
-        for (const epicId in objectives) {
-          const epicObjectives = objectives[epicId] || []
-          for (const objective of epicObjectives) {
+        if (type === "project") {
+          // Para proyectos, objectives es un array
+          for (const objective of objectives) {
             if (objective && objective.id) {
               const data = await getOKRs(objective.id)
               okrsData[objective.id] = data.results || []
+            }
+          }
+        } else {
+          // Para misiones, objectives es un objeto por épica
+          for (const epicId in objectives) {
+            const epicObjectives = objectives[epicId] || []
+            for (const objective of epicObjectives) {
+              if (objective && objective.id) {
+                const data = await getOKRs(objective.id)
+                okrsData[objective.id] = data.results || []
+              }
             }
           }
         }
@@ -98,10 +112,13 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         setOKRError("No se pudieron cargar los OKRs.")
       }
     }
-    if (Object.keys(objectives).length > 0) {
+    if (
+      (type === "project" && Array.isArray(objectives) && objectives.length > 0) ||
+      (type === "mission" && Object.keys(objectives).length > 0)
+    ) {
       fetchOKRs()
     }
-  }, [objectives])
+  }, [objectives, type])
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -209,15 +226,30 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     try {
       setObjectiveLoading(true)
       const userDetails = await getUserDetails();
-      const newObjective = await createObjective({ 
-        ...objectiveData, 
-        epic: objectiveModal.epicId,
-        owner_id: userDetails.id 
-      })
-      setObjectives(prev => ({
-        ...prev,
-        [objectiveModal.epicId]: [newObjective, ...(prev[objectiveModal.epicId] || [])]
-      }))
+      let newObjective;
+      if (type === 'project') {
+        newObjective = await createObjective({
+          ...objectiveData,
+          project: projectId,
+          owner_id: userDetails.id
+        });
+        setObjectives(prev => [newObjective, ...(prev || [])]);
+      } else {
+        if (!objectiveModal.epicId) {
+          setObjectiveError("Debes seleccionar una épica para crear un objetivo.");
+          setObjectiveLoading(false);
+          return;
+        }
+        newObjective = await createObjective({
+          ...objectiveData,
+          epic: objectiveModal.epicId,
+          owner_id: userDetails.id
+        });
+        setObjectives(prev => ({
+          ...prev,
+          [objectiveModal.epicId]: [newObjective, ...(prev[objectiveModal.epicId] || [])]
+        }));
+      }
       setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })
       setObjectiveLoading(false)
     } catch (err) {
@@ -266,13 +298,17 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     try {
       setObjectiveLoading(true)
       await deleteObjective(objectiveId)
-      setObjectives(prev => {
-        const newObjectives = { ...prev }
-        Object.keys(newObjectives).forEach(epicId => {
-          newObjectives[epicId] = newObjectives[epicId].filter(o => o.id !== objectiveId)
+      if (type === 'project') {
+        setObjectives(prev => prev.filter(obj => obj.id !== objectiveId))
+      } else {
+        setObjectives(prev => {
+          const newObjectives = { ...prev }
+          Object.keys(newObjectives).forEach(epicId => {
+            newObjectives[epicId] = newObjectives[epicId].filter(o => o.id !== objectiveId)
+          })
+          return newObjectives
         })
-        return newObjectives
-      })
+      }
       setObjectiveLoading(false)
     } catch (err) {
       setObjectiveError("Error al eliminar el objetivo")
@@ -624,6 +660,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         </div>
         {okrLoading && <div className="okr-loading">Cargando...</div>}
         {okrError && <div className="okr-error">{okrError}</div>}
+        {objectiveOKRs.length === 0 && !okrLoading && !okrError && (
+          <div className="okr-empty">No hay OKRs para este objetivo.</div>
+        )}
         {objectiveOKRs.map(okr => (
           <div key={okr.id} className="okr-item">
             <div className="okr-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -672,53 +711,50 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     )
   }
 
-  const renderObjectives = (epicId) => {
-    const epicObjectives = objectives[epicId] || []
-    return (
-      <div className="objectives-list">
-        <div className="objectives-header">
-          <span style={{fontSize:'13px',fontWeight:500}}>Objetivos</span>
-          <button 
-            className="btn btn-primary" 
-            style={{fontSize:'13px',padding:'2px 10px',height:24}}
-            onClick={() => setObjectiveModal({ open: true, mode: 'create', objective: null, epicId })}
-          >
-            + Nuevo Objetivo
-          </button>
-        </div>
-        {objectiveLoading && <div className="objective-loading">Cargando objetivos...</div>}
-        {objectiveError && <div className="objective-error">{objectiveError}</div>}
-        {epicObjectives.map((objective) => (
-          <div key={objective.id} className="objective-item">
-            <div className="objective-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <div className="objective-header" onClick={() => toggleSection(`objective-${objective.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center'}}>
-                <span className="toggle-icon">{expandedSections[`objective-${objective.id}`] ? '▼' : '▶'}</span>
-                <span style={{fontSize:'13px',fontWeight:500}}>{objective.title}</span>
-              </div>
+  const renderObjectivesProject = (objectivesArr) => (
+    <div className="objectives-list">
+      <div className="objectives-header">
+        <span style={{fontSize:'13px',fontWeight:500}}>Objetivos</span>
+        <button 
+          className="btn btn-primary" 
+          style={{fontSize:'13px',padding:'2px 10px',height:24}}
+          onClick={() => setObjectiveModal({ open: true, mode: 'create', objective: null, epicId: null })}
+        >
+          + Nuevo Objetivo
+        </button>
+      </div>
+      {objectiveLoading && <div className="objective-loading">Cargando objetivos...</div>}
+      {objectiveError && <div className="objective-error">{objectiveError}</div>}
+      {objectivesArr.map((objective) => (
+        <div key={objective.id} className="objective-item">
+          <div className="objective-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div className="objective-header" onClick={() => toggleSection(`objective-${objective.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center'}}>
+              <span className="toggle-icon">{expandedSections[`objective-${objective.id}`] ? '▼' : '▶'}</span>
+              <span style={{fontSize:'13px',fontWeight:500}}>{objective.title}</span>
             </div>
-            {expandedSections[`objective-${objective.id}`] && (
-              <div className="objective-content">
-                <p className="objective-description" style={{fontSize:'12px',color:'#757575'}}>{objective.description}</p>
-                <div className="objective-actions">
-                  <button className="btn" style={{fontSize:'13px'}} onClick={() => setObjectiveModal({ open: true, mode: 'edit', objective, epicId })}>Editar</button>
-                  <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteObjective(objective.id)}>Eliminar</button>
-                </div>
-                {renderOKRs(objective.id)}
+          </div>
+          {expandedSections[`objective-${objective.id}`] && (
+            <div className="objective-content">
+              <p className="objective-description" style={{fontSize:'12px',color:'#757575'}}>{objective.description}</p>
+              <div className="objective-actions">
+                <button className="btn" style={{fontSize:'13px'}} onClick={() => setObjectiveModal({ open: true, mode: 'edit', objective, epicId: null })}>Editar</button>
+                <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteObjective(objective.id)}>Eliminar</button>
               </div>
+              {renderOKRs(objective.id)}
+            </div>
                                   )}
                                 </div>
                               ))}
-        {objectiveModal.open && (
-          <ObjectiveModal
-            mode={objectiveModal.mode}
-            objective={objectiveModal.objective}
-            onClose={() => setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })}
-            onSave={objectiveModal.mode === 'edit' ? handleUpdateObjective : handleCreateObjective}
-          />
+      {objectiveModal.open && (
+        <ObjectiveModal
+          mode={objectiveModal.mode}
+          objective={objectiveModal.objective}
+          onClose={() => setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })}
+          onSave={objectiveModal.mode === 'edit' ? handleUpdateObjective : handleCreateObjective}
+        />
                           )}
                         </div>
-    )
-  }
+  );
 
   const renderEpics = (epics) => (
     <div className="epics-list">
@@ -743,7 +779,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
                 <button className="btn" style={{fontSize:'13px'}} onClick={() => setEpicModal({ open: true, mode: 'edit', epic })}>Editar</button>
                 <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteEpic(epic.id)}>Eliminar</button>
                 </div>
-              {renderObjectives(epic.id)}
+              {renderObjectivesProject(objectives[epic.id] || [])}
             </div>
           )}
         </div>
@@ -766,7 +802,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         <p className="project-description">{details.description}</p>
       </div>
       <div className="details-content">
-        {type === "mission" ? renderEpics(epics) : renderObjectives(details.objectives)}
+        {type === "mission"
+          ? renderEpics(epics)
+          : renderObjectivesProject(objectives)}
       </div>
       {okrModal.show && (
         <OKRModal

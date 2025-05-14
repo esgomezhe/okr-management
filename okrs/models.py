@@ -94,7 +94,8 @@ class Epic(models.Model):
             raise Exception(f"Error al eliminar la épica: {str(e)}")
 
 class Objective(models.Model):
-    epic = models.ForeignKey(Epic, related_name='objectives', on_delete=models.CASCADE)
+    epic = models.ForeignKey(Epic, related_name='objectives', on_delete=models.CASCADE, null=True, blank=True)
+    project = models.ForeignKey(Project, related_name='objectives', on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255)
     description = models.TextField(max_length=2000, blank=True)
     owner = models.ForeignKey(Users, related_name='objectives', on_delete=models.CASCADE)

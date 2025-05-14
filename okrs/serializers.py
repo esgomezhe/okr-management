@@ -128,15 +128,23 @@ class ObjectiveSerializer(serializers.ModelSerializer):
     owner_id = serializers.PrimaryKeyRelatedField(
         queryset=Users.objects.all(), write_only=True, source='owner'
     )
-    epic = serializers.PrimaryKeyRelatedField(queryset=Epic.objects.all())
+    epic = serializers.PrimaryKeyRelatedField(queryset=Epic.objects.all(), allow_null=True, required=False)
+    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all(), allow_null=True, required=False)
     okrs = OKRSerializer(many=True, read_only=True)
 
     class Meta:
         model = Objective
         fields = [
-            'id', 'epic', 'title', 'description', 'owner', 'owner_id',
+            'id', 'epic', 'project', 'title', 'description', 'owner', 'owner_id',
             'okrs', 'created', 'updated'
         ]
+
+    def validate(self, data):
+        if not data.get('epic') and not data.get('project'):
+            raise serializers.ValidationError('Debe especificar una épica o un proyecto.')
+        if data.get('epic') and data.get('project'):
+            raise serializers.ValidationError('No puede especificar ambos: épica y proyecto.')
+        return data
 
 class ProjectSerializer(serializers.ModelSerializer):
     created_by = UsersSimpleSerializer(read_only=True)
@@ -160,8 +168,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         if instance.tipo == 'proyecto':
             # No mostrar épicas, solo objetivos directos
             data['epics'] = []
-            # Suponiendo que hay una relación directa project.objectives
-            data['objectives'] = ObjectiveSerializer(getattr(instance, 'objectives', []), many=True, context=self.context).data
+            data['objectives'] = ObjectiveSerializer(instance.objectives.all(), many=True, context=self.context).data
         else:
             # Si es misión, mostrar épicas y no objetivos directos
             data['objectives'] = []
