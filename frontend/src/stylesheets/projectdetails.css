@@ -1,3 +1,4 @@
+/* --- Variables globales --- */
 :root {
   --primary: #1976d2;
   --success: #43a047;
@@ -54,22 +55,10 @@ body {
   font-weight: 400;
   transition: background 0.15s;
 }
-.btn-primary {
-  background: #e3e3e3;
-  color: var(--gray-dark);
-}
-.btn-danger {
-  background: #fff0f0;
-  color: #d14343;
-  border: 1px solid #ffd6d6;
-}
-.btn-secondary {
-  background: #f5f6f8;
-  color: #757575;
-}
-.btn:hover {
-  background: #ececec;
-}
+.btn-primary { background: #e3e3e3; color: var(--gray-dark); }
+.btn-danger { background: #fff0f0; color: #d14343; border: 1px solid #ffd6d6; }
+.btn-secondary { background: #f5f6f8; color: #757575; }
+.btn:hover { background: #ececec; }
 
 .epic-item, .objective-item, .okr-item, .activity-item, .task-item {
   border-bottom: 1px solid #e3e3e3;

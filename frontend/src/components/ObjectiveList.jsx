@@ -21,7 +21,6 @@ const ObjectiveList = () => {
       setError('');
     } catch (err) {
       setError('Error al cargar los objetivos');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -37,7 +36,6 @@ const ObjectiveList = () => {
       setObjectives((prev) => prev.filter((objective) => objective.id !== id));
     } catch (err) {
       setError('Error al eliminar el objetivo');
-      console.error('Error:', err);
     }
   };
 

@@ -74,9 +74,8 @@ function Header() {
       logout();
       navigate('/login/');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
       // Aún así, forzamos el cierre de sesión local
-    logout();
+      logout();
       navigate('/login/');
     }
   };

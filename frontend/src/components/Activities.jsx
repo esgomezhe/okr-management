@@ -30,7 +30,6 @@ const Activities = ({ missionId, objectiveId, keyResultId }) => {
       setError(null);
     } catch (err) {
       setError('Error al cargar las actividades');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -57,7 +56,6 @@ const Activities = ({ missionId, objectiveId, keyResultId }) => {
       loadActivities();
     } catch (err) {
       setError('Error al guardar la actividad');
-      console.error('Error:', err);
     }
   };
 
@@ -81,7 +79,6 @@ const Activities = ({ missionId, objectiveId, keyResultId }) => {
         loadActivities();
       } catch (err) {
         setError('Error al eliminar la actividad');
-        console.error('Error:', err);
       }
     }
   };

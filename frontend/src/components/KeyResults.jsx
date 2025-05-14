@@ -30,7 +30,6 @@ const KeyResults = ({ missionId, objectiveId }) => {
       setError(null);
     } catch (err) {
       setError('Error al cargar los resultados clave');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -57,7 +56,6 @@ const KeyResults = ({ missionId, objectiveId }) => {
       loadKeyResults();
     } catch (err) {
       setError('Error al guardar el resultado clave');
-      console.error('Error:', err);
     }
   };
 
@@ -81,7 +79,6 @@ const KeyResults = ({ missionId, objectiveId }) => {
         loadKeyResults();
       } catch (err) {
         setError('Error al eliminar el resultado clave');
-        console.error('Error:', err);
       }
     }
   };
@@ -92,7 +89,6 @@ const KeyResults = ({ missionId, objectiveId }) => {
       loadKeyResults();
     } catch (err) {
       setError('Error al actualizar el progreso');
-      console.error('Error:', err);
     }
   };
 

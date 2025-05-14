@@ -18,6 +18,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     # Revertir a las siguientes líneas en producción:
     # permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
 
+    def get_queryset(self):
+        tipo = self.request.query_params.get('tipo')
+        if tipo:
+            return Project.objects.filter(tipo=tipo)
+        return Project.objects.all()
+
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user.users)
 

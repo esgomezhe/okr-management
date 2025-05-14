@@ -19,7 +19,6 @@ const Dashboard = () => {
       setError(null);
     } catch (err) {
       setError('Error al cargar las estadísticas');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

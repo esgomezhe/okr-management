@@ -17,7 +17,6 @@ urlpatterns = [
     # Incluir las URLs de cada aplicación
     path('api/users/', include('users.urls')),
     path('api/okrs/', include('okrs.urls')),
-    path('api/projects/', include('project.urls')),
     
     # Autenticación JWT
     path('api/users/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

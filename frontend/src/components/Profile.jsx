@@ -48,7 +48,6 @@ const Profile = () => {
       setSuccess('Perfil actualizado correctamente');
     } catch (err) {
       setError('Error al actualizar el perfil');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -81,7 +80,6 @@ const Profile = () => {
       }));
     } catch (err) {
       setError('Error al actualizar la contraseña');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

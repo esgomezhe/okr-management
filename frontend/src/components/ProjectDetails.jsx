@@ -35,7 +35,6 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         setDetails(data)
         setLoading(false)
       } catch (err) {
-        console.error(`Error al obtener detalles del ${type} ${projectId}:`, err)
         setError(`No se pudieron cargar los detalles del ${type}.`)
         setLoading(false)
       }
@@ -96,7 +95,6 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         }
         setOKRs(okrsData)
       } catch (err) {
-        console.error("Error al obtener OKRs:", err)
         setOKRError("No se pudieron cargar los OKRs.")
       }
     }
@@ -106,19 +104,16 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
   }, [objectives])
 
   useEffect(() => {
-    console.log('OKRs cargados:', okrs)
     const fetchActivities = async () => {
       const newActivities = {}
       for (const [okrId, okrList] of Object.entries(okrs)) {
         // okrList es un array de OKRs por objetivo
         for (const okr of okrList) {
           if (okr && okr.id) {
-            console.log('Solicitando actividades para OKR', okr.id)
             try {
               const activitiesData = await getActivities(okr.id)
               newActivities[okr.id] = activitiesData.results || []
             } catch (error) {
-              console.error(`Error fetching activities for OKR ${okr.id}:`, error)
               setActivityError(prev => ({ ...prev, [okr.id]: error.message }))
             }
           }
@@ -407,7 +402,6 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       })
       setActivityModal({ show: false, mode: 'create', activity: null, okrId: null })
     } catch (error) {
-      console.error('Error updating activity:', error)
       setActivityError(error.message)
     } finally {
       setActivityLoading(false)
@@ -428,7 +422,6 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         [okrId]: prev[okrId].filter(activity => activity.id !== activityId)
       }))
     } catch (error) {
-      console.error('Error deleting activity:', error)
       setActivityError(error.message)
     } finally {
       setActivityLoading(false)
@@ -662,20 +655,20 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
               </div>
             </div>
             <div className="okr-progress">
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
+                                            <div className="progress-bar">
+                                              <div
+                                                className="progress-fill"
                   style={{ width: `${okr.progress}%` }}
-                ></div>
-              </div>
+                                              ></div>
+                                            </div>
               <span className="progress-text">
                 {okr.current_value}/{okr.target_value} ({okr.progress}%)
               </span>
-            </div>
+                                          </div>
             {expandedSections[`okr-${okr.id}`] && renderActivities(okr.id)}
-          </div>
-        ))}
-      </div>
+                                        </div>
+                                      ))}
+                                    </div>
     )
   }
 
@@ -712,9 +705,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
                 </div>
                 {renderOKRs(objective.id)}
               </div>
-            )}
-          </div>
-        ))}
+                                  )}
+                                </div>
+                              ))}
         {objectiveModal.open && (
           <ObjectiveModal
             mode={objectiveModal.mode}
@@ -722,8 +715,8 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             onClose={() => setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })}
             onSave={objectiveModal.mode === 'edit' ? handleUpdateObjective : handleCreateObjective}
           />
-        )}
-      </div>
+                          )}
+                        </div>
     )
   }
 
@@ -742,14 +735,14 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
               <span className="toggle-icon">{expandedSections[`epic-${epic.id}`] ? '▼' : '▶'}</span>
               <span style={{fontSize:'13px',fontWeight:500}}>{epic.title}</span>
             </div>
-          </div>
+                    </div>
           {expandedSections[`epic-${epic.id}`] && (
             <div className="epic-content">
               <p className="epic-description" style={{fontSize:'12px',color:'#757575'}}>{epic.description}</p>
               <div className="epic-actions">
                 <button className="btn" style={{fontSize:'13px'}} onClick={() => setEpicModal({ open: true, mode: 'edit', epic })}>Editar</button>
                 <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteEpic(epic.id)}>Eliminar</button>
-              </div>
+                </div>
               {renderObjectives(epic.id)}
             </div>
           )}

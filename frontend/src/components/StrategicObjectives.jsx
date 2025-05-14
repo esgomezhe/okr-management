@@ -29,7 +29,6 @@ const StrategicObjectives = ({ missionId }) => {
       setError(null);
     } catch (err) {
       setError('Error al cargar los objetivos estratégicos');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,6 @@ const StrategicObjectives = ({ missionId }) => {
       loadObjectives();
     } catch (err) {
       setError('Error al guardar el objetivo estratégico');
-      console.error('Error:', err);
     }
   };
 
@@ -78,7 +76,6 @@ const StrategicObjectives = ({ missionId }) => {
         loadObjectives();
       } catch (err) {
         setError('Error al eliminar el objetivo estratégico');
-        console.error('Error:', err);
       }
     }
   };

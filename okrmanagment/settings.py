@@ -34,7 +34,6 @@ DJANGO_APPS = [
 PROJECT_APPS = [
     'okrs',
     'users',
-    'project',
 ]
 
 THIRD_PARTY_APPS = [

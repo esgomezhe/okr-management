@@ -8,7 +8,6 @@ const CreateMissionModal = ({ isOpen, onClose, onMissionCreated }) => {
     description: '',
     start_date: '',
     end_date: '',
-    color: '#FF5733',
     members_ids: []
   });
   const [error, setError] = useState(null);
@@ -28,7 +27,7 @@ const CreateMissionModal = ({ isOpen, onClose, onMissionCreated }) => {
     setError(null);
 
     try {
-      const newMission = await createMission(formData);
+      const newMission = await createMission({ ...formData, tipo: 'mision' });
       onMissionCreated(newMission);
       onClose();
     } catch (err) {
@@ -57,6 +56,8 @@ const CreateMissionModal = ({ isOpen, onClose, onMissionCreated }) => {
               value={formData.name}
               onChange={handleChange}
               required
+              className="form-input"
+              placeholder="Ingrese el nombre de la misión"
             />
           </div>
           <div className="form-group">
@@ -67,45 +68,41 @@ const CreateMissionModal = ({ isOpen, onClose, onMissionCreated }) => {
               value={formData.description}
               onChange={handleChange}
               rows="4"
+              className="form-textarea"
+              placeholder="Describa el propósito y objetivos de la misión"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="start_date">Fecha de Inicio</label>
-            <input
-              type="date"
-              id="start_date"
-              name="start_date"
-              value={formData.start_date}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="end_date">Fecha de Finalización</label>
-            <input
-              type="date"
-              id="end_date"
-              name="end_date"
-              value={formData.end_date}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="color">Color</label>
-            <input
-              type="color"
-              id="color"
-              name="color"
-              value={formData.color}
-              onChange={handleChange}
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="start_date">Fecha de Inicio</label>
+              <input
+                type="date"
+                id="start_date"
+                name="start_date"
+                value={formData.start_date}
+                onChange={handleChange}
+                required
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="end_date">Fecha de Finalización</label>
+              <input
+                type="date"
+                id="end_date"
+                name="end_date"
+                value={formData.end_date}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
           </div>
           {error && <div className="error-message">{error}</div>}
           <div className="modal-footer">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Creando...' : 'Crear Misión'}
             </button>
           </div>

@@ -29,7 +29,6 @@ const Tasks = ({ missionId, objectiveId, keyResultId, activityId }) => {
       setError(null);
     } catch (err) {
       setError('Error al cargar las tareas');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,6 @@ const Tasks = ({ missionId, objectiveId, keyResultId, activityId }) => {
       loadTasks();
     } catch (err) {
       setError('Error al guardar la tarea');
-      console.error('Error:', err);
     }
   };
 
@@ -78,7 +76,6 @@ const Tasks = ({ missionId, objectiveId, keyResultId, activityId }) => {
         loadTasks();
       } catch (err) {
         setError('Error al eliminar la tarea');
-        console.error('Error:', err);
       }
     }
   };

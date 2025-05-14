@@ -28,7 +28,6 @@ const MissionsDashboard = () => {
           }
           setLoadingMissions(false);
         } catch (err) {
-          console.error("Error al obtener misiones:", err);
           setError("No se pudieron cargar las misiones.");
           setLoadingMissions(false);
         }

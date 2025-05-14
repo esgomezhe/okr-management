@@ -23,7 +23,6 @@ const Notifications = () => {
       setError(null);
     } catch (err) {
       setError('Error al cargar las notificaciones');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -35,7 +34,6 @@ const Notifications = () => {
       loadNotifications();
     } catch (err) {
       setError('Error al marcar la notificación como leída');
-      console.error('Error:', err);
     }
   };
 
@@ -45,7 +43,6 @@ const Notifications = () => {
       loadNotifications();
     } catch (err) {
       setError('Error al marcar todas las notificaciones como leídas');
-      console.error('Error:', err);
     }
   };
 
@@ -56,7 +53,6 @@ const Notifications = () => {
         loadNotifications();
       } catch (err) {
         setError('Error al eliminar la notificación');
-        console.error('Error:', err);
       }
     }
   };

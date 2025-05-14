@@ -22,6 +22,10 @@ LOG_TYPES = (
 PROGRESS_DICT = {'backlog': 0, 'in progress': 50, 'completed': 100}
 
 class Project(models.Model):
+    TIPO_CHOICES = (
+        ('mision', 'Misión'),
+        ('proyecto', 'Proyecto'),
+    )
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=2000, blank=True)
     created_by = models.ForeignKey(Users, related_name='projects_created', on_delete=models.CASCADE)
@@ -29,6 +33,7 @@ class Project(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     color = ColorField(default='#FF5733')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='mision')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -36,10 +41,13 @@ class Project(models.Model):
         ordering = ['created']
     
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.get_tipo_display()})"
     
     def get_objectives_num(self):
-        return sum(epic.objectives.count() for epic in self.epics.all())
+        if self.tipo == 'mision':
+            return sum(epic.objectives.count() for epic in self.epics.all())
+        else:
+            return self.objectives.count() if hasattr(self, 'objectives') else 0
     
     def get_logs(self):
         return self.logs.all()

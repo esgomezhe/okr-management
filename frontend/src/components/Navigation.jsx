@@ -12,7 +12,7 @@ const Navigation = () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      // Eliminar todas las líneas con console.log, console.error, debugger y código/imports no usados
     }
   };
 

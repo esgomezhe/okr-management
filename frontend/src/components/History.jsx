@@ -19,7 +19,6 @@ const History = ({ missionId, objectiveId, keyResultId, activityId, taskId }) =>
       setError(null);
     } catch (err) {
       setError('Error al cargar el historial');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

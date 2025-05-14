@@ -20,7 +20,6 @@ const Attachments = ({ missionId, objectiveId, keyResultId, activityId, taskId }
       setError(null);
     } catch (err) {
       setError('Error al cargar los archivos adjuntos');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -40,7 +39,6 @@ const Attachments = ({ missionId, objectiveId, keyResultId, activityId, taskId }
       loadAttachments();
     } catch (err) {
       setError('Error al subir los archivos');
-      console.error('Error:', err);
     } finally {
       setUploading(false);
     }
@@ -53,7 +51,6 @@ const Attachments = ({ missionId, objectiveId, keyResultId, activityId, taskId }
         loadAttachments();
       } catch (err) {
         setError('Error al eliminar el archivo');
-        console.error('Error:', err);
       }
     }
   };
@@ -70,7 +67,6 @@ const Attachments = ({ missionId, objectiveId, keyResultId, activityId, taskId }
       link.remove();
     } catch (err) {
       setError('Error al descargar el archivo');
-      console.error('Error:', err);
     }
   };
 

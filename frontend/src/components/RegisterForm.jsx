@@ -39,7 +39,6 @@ const RegisterForm = () => {
       navigate('/');
     } catch (err) {
       setError('Error al registrar usuario. Por favor, intenta de nuevo.');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

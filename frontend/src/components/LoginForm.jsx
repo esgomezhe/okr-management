@@ -31,7 +31,6 @@ const LoginForm = () => {
       navigate('/');
     } catch (err) {
       setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

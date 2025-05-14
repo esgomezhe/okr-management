@@ -145,14 +145,27 @@ class ProjectSerializer(serializers.ModelSerializer):
         queryset=Users.objects.all(), many=True, write_only=True, source='members'
     )
     epics = EpicSerializer(many=True, read_only=True)
+    tipo = serializers.CharField()
 
     class Meta:
         model = Project
         fields = [
             'id', 'name', 'description', 'created_by', 'members', 'members_ids',
-            'epics',  # Antes: objectives
+            'epics', 'tipo',
             'start_date', 'end_date', 'color', 'created', 'updated'
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.tipo == 'proyecto':
+            # No mostrar épicas, solo objetivos directos
+            data['epics'] = []
+            # Suponiendo que hay una relación directa project.objectives
+            data['objectives'] = ObjectiveSerializer(getattr(instance, 'objectives', []), many=True, context=self.context).data
+        else:
+            # Si es misión, mostrar épicas y no objetivos directos
+            data['objectives'] = []
+        return data
 
     def create(self, validated_data):
         members = validated_data.pop('members', [])

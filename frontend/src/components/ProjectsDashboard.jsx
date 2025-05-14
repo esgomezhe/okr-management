@@ -28,13 +28,11 @@ const ProjectsDashboard = () => {
           }
           setLoadingProjects(false);
         } catch (err) {
-          console.error("Error al obtener proyectos:", err);
           setError("No se pudieron cargar los proyectos.");
           setLoadingProjects(false);
         }
       }
     };
-
     fetchProjects();
   }, [user, page]);
 
@@ -80,7 +78,7 @@ const ProjectsDashboard = () => {
         <h2>Planificador de Proyectos</h2>
         <p className="dashboard-description">
           Usa esta plantilla para hacer un seguimiento de todos tus proyectos. Abre cada proyecto haciendo clic
-          en el desplegable para ver las tareas y actividades. Asigna fechas límite y actualiza los estados para estar al tanto de
+          en el desplegable para ver los objetivos y OKRs. Asigna fechas límite y actualiza los estados para estar al tanto de
           tus proyectos.
         </p>
         <div className="dashboard-actions">

@@ -3,9 +3,9 @@ from .models import Project, ProjectMembers, Epic, Objective, OKR, Activity, Tas
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_by', 'start_date', 'end_date', 'created', 'updated')
+    list_display = ('name', 'tipo', 'created_by', 'start_date', 'end_date', 'created', 'updated')
     search_fields = ('name', 'description')
-    list_filter = ('start_date', 'end_date', 'created_by')
+    list_filter = ('tipo', 'start_date', 'end_date', 'created_by')
 
 @admin.register(ProjectMembers)
 class ProjectMembersAdmin(admin.ModelAdmin):
