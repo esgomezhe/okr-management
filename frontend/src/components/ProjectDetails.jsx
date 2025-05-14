@@ -182,7 +182,12 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
   const handleUpdateEpic = async (epicId, epicData) => {
     try {
       setEpicLoading(true)
-      const updated = await updateEpic(epicId, epicData)
+      const userDetails = await getUserDetails();
+      const updated = await updateEpic(epicId, {
+        ...epicData,
+        project: projectId,
+        owner_id: userDetails.id
+      })
       setEpics((prev) => prev.map(e => e.id === epicId ? updated : e))
       setEpicModal({ open: false, mode: 'create', epic: null })
       setEpicLoading(false)
@@ -229,7 +234,21 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
   const handleUpdateObjective = async (objectiveId, objectiveData) => {
     try {
       setObjectiveLoading(true)
-      const updated = await updateObjective(objectiveId, objectiveData)
+      const userDetails = await getUserDetails();
+      // Buscar el epicId al que pertenece el objetivo si no está en el modal
+      let epicId = objectiveModal.epicId;
+      if (!epicId) {
+        Object.keys(objectives).forEach(key => {
+          if (objectives[key].some(obj => obj.id === objectiveId)) {
+            epicId = key;
+          }
+        });
+      }
+      const updated = await updateObjective(objectiveId, {
+        ...objectiveData,
+        epic: epicId,
+        owner_id: userDetails.id
+      })
       setObjectives(prev => {
         const newObjectives = { ...prev }
         Object.keys(newObjectives).forEach(epicId => {
@@ -294,7 +313,12 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     try {
       setOKRLoading(true)
       setOKRError(null)
-      const updatedOKR = await updateOKR(okrId, data)
+      const userDetails = await getUserDetails();
+      const updatedOKR = await updateOKR(okrId, {
+        ...data,
+        objective: okrModal.objectiveId || (okrs && Object.keys(okrs).find(key => okrs[key].some(okr => okr.id === okrId))),
+        owner_id: userDetails.id
+      })
       setOKRs(prev => {
         const newOKRs = { ...prev }
         Object.keys(newOKRs).forEach(objectiveId => {
@@ -359,7 +383,19 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     try {
       setActivityLoading(true)
       setActivityError(null)
-      const updatedActivity = await updateActivity(activityId, data)
+      const userDetails = await getUserDetails();
+      // Buscar el okrId al que pertenece la actividad
+      let okrId = null;
+      Object.keys(activities).forEach(key => {
+        if (activities[key].some(act => act.id === activityId)) {
+          okrId = key;
+        }
+      });
+      const updatedActivity = await updateActivity(activityId, {
+        ...data,
+        okr: okrId,
+        owner_id: userDetails.id
+      })
       setActivities(prev => {
         const newActivities = { ...prev }
         Object.keys(newActivities).forEach(okrId => {
@@ -426,7 +462,19 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     try {
       setTaskLoading(true)
       setTaskError(null)
-      const updatedTask = await updateTask(taskId, data)
+      // Buscar el activityId al que pertenece la tarea
+      let activityId = null;
+      Object.keys(tasks).forEach(key => {
+        if (tasks[key].some(task => task.id === taskId)) {
+          activityId = key;
+        }
+      });
+      const userDetails = await getUserDetails();
+      const updatedTask = await updateTask(taskId, {
+        ...data,
+        activity: activityId,
+        assignee_id: userDetails.id
+      })
       setTasks(prev => {
         const newTasks = { ...prev }
         Object.keys(newTasks).forEach(activityId => {
@@ -488,10 +536,11 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     const activityTasks = tasks[activityId] || []
     return (
       <div className="tasks-list">
-        <div className="tasks-header">
-          <h5>Tareas</h5>
+        <div className="tasks-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
+          <span style={{fontSize:'13px',fontWeight:500}}>Tareas</span>
           <button
-            className="task-add-btn"
+            className="btn btn-primary"
+            style={{fontSize:'13px',padding:'2px 10px',height:24}}
             onClick={() => setTaskModal({ show: true, mode: 'create', task: null, activityId })}
           >
             + Nueva Tarea
@@ -501,17 +550,17 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         {taskError && <div className="task-error">{taskError}</div>}
         {activityTasks.length > 0 ? activityTasks.map((task) => (
           <div key={task.id} className="task-item">
-            <div className="task-header">
-              <h4>{task.title}</h4>
+            <div className="task-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:'13px',fontWeight:500}}>{task.title}</span>
               <span className={`status-badge ${task.status}`}>{task.status}</span>
             </div>
-            <p className="task-description">{task.desc}</p>
+            <p className="task-description" style={{fontSize:'12px',color:'#757575'}}>{task.desc}</p>
             <div className="task-actions">
-              <button className="task-edit-btn" onClick={() => setTaskModal({ show: true, mode: 'edit', task, activityId })}>Editar</button>
-              <button className="task-delete-btn" onClick={() => handleDeleteTask(activityId, task.id)}>Eliminar</button>
+              <button className="btn" style={{fontSize:'13px'}} onClick={() => setTaskModal({ show: true, mode: 'edit', task, activityId })}>Editar</button>
+              <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteTask(activityId, task.id)}>Eliminar</button>
             </div>
           </div>
-        )) : <p className="no-tasks">No hay tareas asociadas</p>}
+        )) : <p className="no-tasks" style={{fontSize:'12px',color:'#b3b3b3'}}>No hay tareas asociadas</p>}
                           </div>
     )
   }
@@ -521,9 +570,10 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     return (
                             <div className="activities-container">
         <div className="activities-header">
-          <h4>Actividades</h4>
+          <span style={{fontSize:'13px',fontWeight:500}}>Actividades</span>
           <button
-            className="activity-add-btn"
+            className="btn btn-primary"
+            style={{fontSize:'13px',padding:'2px 10px',height:24}}
             onClick={() => setActivityModal({ show: true, mode: 'create', activity: null, okrId })}
           >
             Agregar Actividad
@@ -533,35 +583,32 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         {activityError && <div className="activity-error">Error: {activityError}</div>}
         {okrActivities.map(activity => (
           <div key={activity.id} className="activity-item">
-            <div className="activity-header">
-              <h5>{activity.name}</h5>
+            <div className="activity-header" onClick={() => toggleSection(`activity-${activity.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center'}}>
+                <span className="toggle-icon">{expandedSections[`activity-${activity.id}`] ? '▼' : '▶'}</span>
+                <span style={{fontSize:'13px',fontWeight:500}}>{activity.name}</span>
+              </div>
               <div className="activity-actions">
-                <button
-                  className="activity-edit-btn"
-                  onClick={() => setActivityModal({ show: true, mode: 'edit', activity, okrId })}
-                >
-                  Editar
-                </button>
-                <button
-                  className="activity-delete-btn"
-                  onClick={() => handleDeleteActivity(okrId, activity.id)}
-                >
-                  Eliminar
-                </button>
+                <button className="btn" style={{fontSize:'13px'}} onClick={(e) => {e.stopPropagation(); setActivityModal({ show: true, mode: 'edit', activity, okrId });}}>Editar</button>
+                <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={(e) => {e.stopPropagation(); handleDeleteActivity(okrId, activity.id);}}>Eliminar</button>
               </div>
             </div>
-            <p>{activity.description}</p>
-            <div className="activity-dates">
-              <span>Inicio: {new Date(activity.start_date).toLocaleDateString()}</span>
-              <span>Fin: {new Date(activity.end_date).toLocaleDateString()}</span>
-            </div>
-            <div className="activity-progress">
-              <span>Progreso: {activity.progress}%</span>
-            </div>
-            <div className="activity-tasks">
-              <h5>Tareas Asociadas</h5>
-              {renderTasks(activity.id)}
-            </div>
+            {expandedSections[`activity-${activity.id}`] && (
+              <div className="activity-content">
+                <p className="activity-description" style={{fontSize:'12px',color:'#757575'}}>{activity.description}</p>
+                <div className="activity-dates">
+                  <span>Inicio: {new Date(activity.start_date).toLocaleDateString()}</span>
+                  <span>Fin: {new Date(activity.end_date).toLocaleDateString()}</span>
+                </div>
+                <div className="activity-progress">
+                  <span>Progreso: {activity.progress}%</span>
+                </div>
+                <div className="activity-tasks">
+                  <span style={{fontSize:'12px',fontWeight:500}}>Tareas Asociadas</span>
+                  {renderTasks(activity.id)}
+                </div>
+              </div>
+            )}
           </div>
         ))}
                                   </div>
@@ -573,9 +620,10 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     return (
       <div className="okrs-container">
         <div className="okrs-header">
-          <h3>OKRs</h3>
+          <span style={{fontSize:'13px',fontWeight:500}}>OKRs</span>
           <button 
-            className="okr-add-btn"
+            className="btn btn-primary"
+            style={{fontSize:'13px',padding:'2px 10px',height:24}}
             onClick={() => setOKRModal({ show: true, mode: 'create', okr: null, objectiveId })}
           >
             Agregar OKR
@@ -585,38 +633,49 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         {okrError && <div className="okr-error">{okrError}</div>}
         {objectiveOKRs.map(okr => (
           <div key={okr.id} className="okr-item">
-            <div className="okr-header-row">
-              <h4>{okr.key_result}</h4>
+            <div className="okr-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div className="okr-header" onClick={() => toggleSection(`okr-${okr.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center'}}>
+                <span className="toggle-icon">{expandedSections[`okr-${okr.id}`] ? '▼' : '▶'}</span>
+                <span style={{fontSize:'13px',fontWeight:500}}>{okr.key_result}</span>
+              </div>
               <div className="okr-actions">
                 <button 
-                  className="okr-edit-btn"
-                  onClick={() => setOKRModal({ show: true, mode: 'edit', okr, objectiveId })}
+                  className="btn"
+                  style={{fontSize:'13px'}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOKRModal({ show: true, mode: 'edit', okr, objectiveId });
+                  }}
                 >
                   Editar
                 </button>
                 <button 
-                  className="okr-delete-btn"
-                  onClick={() => handleDeleteOKR(okr.id)}
+                  className="btn btn-danger"
+                  style={{fontSize:'13px'}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteOKR(okr.id);
+                  }}
                 >
                   Eliminar
                 </button>
               </div>
             </div>
             <div className="okr-progress">
-                                            <div className="progress-bar">
-                                              <div
-                                                className="progress-fill"
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
                   style={{ width: `${okr.progress}%` }}
-                                              ></div>
-                                            </div>
+                ></div>
+              </div>
               <span className="progress-text">
                 {okr.current_value}/{okr.target_value} ({okr.progress}%)
               </span>
-                                          </div>
-            {renderActivities(okr.id)}
-                                        </div>
-                                      ))}
-                                    </div>
+            </div>
+            {expandedSections[`okr-${okr.id}`] && renderActivities(okr.id)}
+          </div>
+        ))}
+      </div>
     )
   }
 
@@ -625,9 +684,10 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     return (
       <div className="objectives-list">
         <div className="objectives-header">
-          <h2>Objetivos</h2>
+          <span style={{fontSize:'13px',fontWeight:500}}>Objetivos</span>
           <button 
-            className="objective-add-btn" 
+            className="btn btn-primary" 
+            style={{fontSize:'13px',padding:'2px 10px',height:24}}
             onClick={() => setObjectiveModal({ open: true, mode: 'create', objective: null, epicId })}
           >
             + Nuevo Objetivo
@@ -637,24 +697,24 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         {objectiveError && <div className="objective-error">{objectiveError}</div>}
         {epicObjectives.map((objective) => (
           <div key={objective.id} className="objective-item">
-            <div className="objective-header-row">
-              <div className="objective-header" onClick={() => toggleSection(`objective-${objective.id}`)}>
-                <span className={`toggle-icon ${expandedSections[`objective-${objective.id}`] ? "open" : ""}`}>▶</span>
-                <h2>{objective.title}</h2>
-              </div>
-              <div className="objective-actions">
-                <button className="objective-edit-btn" onClick={() => setObjectiveModal({ open: true, mode: 'edit', objective, epicId })}>Editar</button>
-                <button className="objective-delete-btn" onClick={() => handleDeleteObjective(objective.id)}>Eliminar</button>
+            <div className="objective-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div className="objective-header" onClick={() => toggleSection(`objective-${objective.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center'}}>
+                <span className="toggle-icon">{expandedSections[`objective-${objective.id}`] ? '▼' : '▶'}</span>
+                <span style={{fontSize:'13px',fontWeight:500}}>{objective.title}</span>
               </div>
             </div>
             {expandedSections[`objective-${objective.id}`] && (
               <div className="objective-content">
-                <p className="objective-description">{objective.description}</p>
+                <p className="objective-description" style={{fontSize:'12px',color:'#757575'}}>{objective.description}</p>
+                <div className="objective-actions">
+                  <button className="btn" style={{fontSize:'13px'}} onClick={() => setObjectiveModal({ open: true, mode: 'edit', objective, epicId })}>Editar</button>
+                  <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteObjective(objective.id)}>Eliminar</button>
+                </div>
                 {renderOKRs(objective.id)}
               </div>
-                                  )}
-                                </div>
-                              ))}
+            )}
+          </div>
+        ))}
         {objectiveModal.open && (
           <ObjectiveModal
             mode={objectiveModal.mode}
@@ -662,34 +722,34 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             onClose={() => setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })}
             onSave={objectiveModal.mode === 'edit' ? handleUpdateObjective : handleCreateObjective}
           />
-                          )}
-                        </div>
+        )}
+      </div>
     )
   }
 
   const renderEpics = (epics) => (
     <div className="epics-list">
       <div className="epics-header">
-        <h2>Épicas (Objetivos Estratégicos)</h2>
-        <button className="epic-add-btn" onClick={() => setEpicModal({ open: true, mode: 'create', epic: null })}>+ Nueva Épica</button>
+        <span style={{fontSize:'13px',fontWeight:500}}>Épicas (Objetivos Estratégicos)</span>
+        <button className="btn btn-primary" style={{fontSize:'13px',padding:'2px 10px',height:24}} onClick={() => setEpicModal({ open: true, mode: 'create', epic: null })}>+ Nueva Épica</button>
       </div>
       {epicLoading && <div className="epic-loading">Cargando épicas...</div>}
       {epicError && <div className="epic-error">{epicError}</div>}
       {epics?.map((epic) => (
         <div key={epic.id} className="epic-item">
-          <div className="epic-header-row">
-            <div className="epic-header" onClick={() => toggleSection(`epic-${epic.id}`)}>
-              <span className={`toggle-icon ${expandedSections[`epic-${epic.id}`] ? "open" : ""}`}>▶</span>
-              <h2>{epic.title}</h2>
+          <div className="epic-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div className="epic-header" onClick={() => toggleSection(`epic-${epic.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center'}}>
+              <span className="toggle-icon">{expandedSections[`epic-${epic.id}`] ? '▼' : '▶'}</span>
+              <span style={{fontSize:'13px',fontWeight:500}}>{epic.title}</span>
             </div>
-            <div className="epic-actions">
-              <button className="epic-edit-btn" onClick={() => setEpicModal({ open: true, mode: 'edit', epic })}>Editar</button>
-              <button className="epic-delete-btn" onClick={() => handleDeleteEpic(epic.id)}>Eliminar</button>
-                    </div>
-                </div>
+          </div>
           {expandedSections[`epic-${epic.id}`] && (
             <div className="epic-content">
-              <p className="epic-description">{epic.description}</p>
+              <p className="epic-description" style={{fontSize:'12px',color:'#757575'}}>{epic.description}</p>
+              <div className="epic-actions">
+                <button className="btn" style={{fontSize:'13px'}} onClick={() => setEpicModal({ open: true, mode: 'edit', epic })}>Editar</button>
+                <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteEpic(epic.id)}>Eliminar</button>
+              </div>
               {renderObjectives(epic.id)}
             </div>
           )}
@@ -758,6 +818,14 @@ const EpicModal = ({ mode, epic, onClose, onSave }) => {
     title: epic?.title || '',
     description: epic?.description || ''
   })
+  useEffect(() => {
+    if (mode === 'edit' && epic) {
+      setForm({
+        title: epic.title || '',
+        description: epic.description || ''
+      })
+    }
+  }, [mode, epic])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -816,10 +884,10 @@ const EpicModal = ({ mode, epic, onClose, onSave }) => {
           </div>
           {error && <div className="error-message">{error}</div>}
           <div className="modal-footer">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
@@ -835,6 +903,14 @@ const ObjectiveModal = ({ mode, objective, onClose, onSave }) => {
     title: objective?.title || '',
     description: objective?.description || ''
   })
+  useEffect(() => {
+    if (mode === 'edit' && objective) {
+      setForm({
+        title: objective.title || '',
+        description: objective.description || ''
+      })
+    }
+  }, [mode, objective])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -893,10 +969,10 @@ const ObjectiveModal = ({ mode, objective, onClose, onSave }) => {
           </div>
           {error && <div className="error-message">{error}</div>}
           <div className="modal-footer">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
@@ -910,10 +986,20 @@ const ObjectiveModal = ({ mode, objective, onClose, onSave }) => {
 const OKRModal = ({ show, onClose, onSave, okr }) => {
   const [form, setForm] = useState({
     key_result: okr?.key_result || '',
-    current_value: 0,
-    target_value: 100,
-    progress: 0
+    current_value: okr?.current_value || 0,
+    target_value: okr?.target_value || 100,
+    progress: okr?.progress || 0
   })
+  useEffect(() => {
+    if (show === 'edit' && okr) {
+      setForm({
+        key_result: okr.key_result || '',
+        current_value: okr.current_value || 0,
+        target_value: okr.target_value || 100,
+        progress: okr.progress || 0
+      })
+    }
+  }, [show, okr])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -982,10 +1068,10 @@ const OKRModal = ({ show, onClose, onSave, okr }) => {
           </div>
           {error && <div className="error-message">{error}</div>}
           <div className="modal-footer">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
@@ -1003,6 +1089,16 @@ const ActivityModal = ({ mode, activity, onClose, onSave }) => {
     start_date: activity?.start_date || '',
     end_date: activity?.end_date || ''
   })
+  useEffect(() => {
+    if (mode === 'edit' && activity) {
+      setForm({
+        name: activity.name || '',
+        description: activity.description || '',
+        start_date: activity.start_date || '',
+        end_date: activity.end_date || ''
+      })
+    }
+  }, [mode, activity])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -1085,10 +1181,10 @@ const ActivityModal = ({ mode, activity, onClose, onSave }) => {
           </div>
           {error && <div className="error-message">{error}</div>}
           <div className="modal-footer">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
@@ -1105,6 +1201,15 @@ const TaskModal = ({ mode, task, onClose, onSave }) => {
     desc: task?.desc || '',
     status: task?.status || 'backlog'
   })
+  useEffect(() => {
+    if (mode === 'edit' && task) {
+      setForm({
+        title: task.title || '',
+        desc: task.desc || '',
+        status: task.status || 'backlog'
+      })
+    }
+  }, [mode, task])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -1177,10 +1282,10 @@ const TaskModal = ({ mode, task, onClose, onSave }) => {
           </div>
           {error && <div className="error-message">{error}</div>}
           <div className="modal-footer">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
