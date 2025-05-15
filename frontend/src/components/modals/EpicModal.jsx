@@ -48,7 +48,7 @@ const EpicModal = ({ mode, epic, onClose, onSave }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="epic-title">Título</label>
+            <label htmlFor="epic-title">Título: </label>
             <input
               type="text"
               id="epic-title"
@@ -60,7 +60,7 @@ const EpicModal = ({ mode, epic, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="epic-description">Descripción</label>
+            <label htmlFor="epic-description">Descripción: </label>
             <textarea
               id="epic-description"
               name="description"

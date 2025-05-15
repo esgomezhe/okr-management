@@ -52,7 +52,7 @@ const ActivityModal = ({ mode, activity, onClose, onSave }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="activity-name">Nombre</label>
+            <label htmlFor="activity-name">Nombre :</label>
             <input
               type="text"
               id="activity-name"
@@ -64,7 +64,7 @@ const ActivityModal = ({ mode, activity, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="activity-description">Descripción</label>
+            <label htmlFor="activity-description">Descripción :</label>
             <textarea
               id="activity-description"
               name="description"
@@ -75,7 +75,7 @@ const ActivityModal = ({ mode, activity, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="activity-start_date">Fecha de Inicio</label>
+            <label htmlFor="activity-start_date">Fecha de Inicio :</label>
             <input
               type="date"
               id="activity-start_date"
@@ -87,7 +87,7 @@ const ActivityModal = ({ mode, activity, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="activity-end_date">Fecha de Finalización</label>
+            <label htmlFor="activity-end_date">Fecha de Finalización :</label>
             <input
               type="date"
               id="activity-end_date"

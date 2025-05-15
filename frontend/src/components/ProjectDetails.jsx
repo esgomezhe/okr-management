@@ -551,14 +551,14 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
   }
 
   const renderProgressBar = (current, target, percentage) => (
-    <div className="progress-container">
-                              <div className="progress-bar">
+    <div className="progress-container" style={{ marginBottom: '12px' }}>
+      <div className="progress-bar">
         <div className="progress-fill" style={{ width: `${percentage || 0}%` }}></div>
-                              </div>
-                              <span className="progress-text">
+      </div>
+      <span className="progress-text">
         {current || 0}/{target || 100} ({percentage || 0}%)
-                              </span>
-                            </div>
+      </span>
+    </div>
   )
 
   const renderTasks = (activityId) => {
@@ -625,11 +625,12 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             {expandedSections[`activity-${activity.id}`] && (
               <div className="activity-content">
                 <p className="activity-description" style={{fontSize:'12px',color:'#757575'}}>{activity.description}</p>
-                <div className="activity-dates">
+                <div className="activity-dates" style={{ display: 'flex', gap: '16px', marginBottom: '4px' }}>
                   <span>Inicio: {new Date(activity.start_date).toLocaleDateString()}</span>
+                  <span>|</span>
                   <span>Fin: {new Date(activity.end_date).toLocaleDateString()}</span>
                 </div>
-                <div className="activity-progress">
+                <div className="activity-progress" style={{ marginBottom: '12px' }}>
                   <span>Progreso: {activity.progress}%</span>
                 </div>
                 <div className="activity-tasks">
@@ -670,40 +671,40 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
                 <span className="toggle-icon">{expandedSections[`okr-${okr.id}`] ? '▼' : '▶'}</span>
                 <span style={{fontSize:'13px',fontWeight:500}}>{okr.key_result}</span>
               </div>
-              <div className="okr-actions">
-                <button 
-                  className="btn"
-                  style={{fontSize:'13px'}}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOKRModal({ show: true, mode: 'edit', okr, objectiveId });
-                  }}
-                >
-                  Editar
-                </button>
-                <button 
-                  className="btn btn-danger"
-                  style={{fontSize:'13px'}}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteOKR(okr.id);
-                  }}
-                >
-                  Eliminar
-                </button>
-              </div>
             </div>
-            <div className="okr-progress">
-                                            <div className="progress-bar">
-                                              <div
-                                                className="progress-fill"
+            <div className="okr-progress" style={{ marginBottom: '16px' }}>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
                   style={{ width: `${okr.progress}%` }}
-                                              ></div>
-                                            </div>
+                ></div>
+              </div>
               <span className="progress-text">
                 {okr.current_value}/{okr.target_value} ({okr.progress}%)
               </span>
-                                          </div>
+            </div>
+            <div className="okr-actions" style={{ marginTop: '10px' }}>
+              <button 
+                className="btn"
+                style={{fontSize:'13px'}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOKRModal({ show: true, mode: 'edit', okr, objectiveId });
+                }}
+              >
+                Editar
+              </button>
+              <button 
+                className="btn btn-danger"
+                style={{fontSize:'13px'}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteOKR(okr.id);
+                }}
+              >
+                Eliminar
+              </button>
+            </div>
             {expandedSections[`okr-${okr.id}`] && renderActivities(okr.id)}
                                         </div>
                                       ))}

@@ -52,7 +52,7 @@ const OKRModal = ({ show, onClose, onSave, okr }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="okr-key_result">Resultado Clave</label>
+            <label htmlFor="okr-key_result">Resultado Clave :</label>
             <input
               type="text"
               id="okr-key_result"
@@ -65,22 +65,22 @@ const OKRModal = ({ show, onClose, onSave, okr }) => {
             />
           </div>
           <div className="form-group">
-            <label>Información del Progreso</label>
-            <div className="info-box">
+            <label>Información del Progreso :</label>
+            <div className="info-box" style={{ marginTop: '10px' }}>
               <div className="info-item">
-                <span className="info-label">Valor Actual:</span>
+                <span className="info-label">Valor Actual: </span>
                 <span className="info-value">{form.current_value}</span>
               </div>
               <div className="info-item">
-                <span className="info-label">Valor Objetivo:</span>
+                <span className="info-label">Valor Objetivo: </span>
                 <span className="info-value">{form.target_value}</span>
               </div>
               <div className="info-item">
-                <span className="info-label">Progreso:</span>
+                <span className="info-label">Progreso: </span>
                 <span className="info-value">{form.progress}%</span>
               </div>
             </div>
-            <small className="form-text">
+            <small className="form-text" style={{ marginTop: '10px', display: 'block' }}>
               El progreso se calcula automáticamente según las tareas completadas asociadas a este OKR.
             </small>
           </div>

@@ -50,7 +50,7 @@ const TaskModal = ({ mode, task, onClose, onSave }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="task-title">Título</label>
+            <label htmlFor="task-title">Título: </label>
             <input
               type="text"
               id="task-title"
@@ -62,7 +62,7 @@ const TaskModal = ({ mode, task, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="task-desc">Descripción</label>
+            <label htmlFor="task-desc">Descripción: </label>
             <textarea
               id="task-desc"
               name="desc"
@@ -73,7 +73,7 @@ const TaskModal = ({ mode, task, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="task-status">Estado</label>
+            <label htmlFor="task-status">Estado: </label>
             <select
               id="task-status"
               name="status"

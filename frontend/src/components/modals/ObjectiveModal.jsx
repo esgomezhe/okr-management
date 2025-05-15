@@ -48,7 +48,7 @@ const ObjectiveModal = ({ mode, objective, onClose, onSave }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="objective-title">Título</label>
+            <label htmlFor="objective-title">Título: </label>
             <input
               type="text"
               id="objective-title"
@@ -60,7 +60,7 @@ const ObjectiveModal = ({ mode, objective, onClose, onSave }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="objective-description">Descripción</label>
+            <label htmlFor="objective-description">Descripción: </label>
             <textarea
               id="objective-description"
               name="description"
