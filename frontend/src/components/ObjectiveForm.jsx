@@ -1,83 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { objectiveService } from '../utils/apiServices';
 import '../stylesheets/objective.css';
+import BaseForm from './forms/BaseForm';
+import { useForm } from '../hooks/useForm';
+
+const initialState = {
+  title: '',
+  description: '',
+  start_date: '',
+  end_date: '',
+  status: 'active',
+  progress: 0,
+};
 
 const ObjectiveForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    status: 'active',
-    progress: 0,
-  });
+  const onSubmit = async (data) => {
+    if (isEditing) {
+      await objectiveService.updateObjective(id, data);
+    } else {
+      await objectiveService.createObjective(data);
+    }
+    navigate('/objectives');
+  };
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const {
+    formData,
+    errors,
+    loading,
+    handleChange,
+    handleSubmit,
+    setFormData
+  } = useForm(initialState, onSubmit);
 
   useEffect(() => {
     if (isEditing) {
+      const loadObjective = async () => {
+        try {
+          const response = await objectiveService.getObjective(id);
+          const objective = response.data;
+          setFormData({
+            title: objective.title,
+            description: objective.description,
+            start_date: objective.start_date.split('T')[0],
+            end_date: objective.end_date.split('T')[0],
+            status: objective.status,
+            progress: objective.progress,
+          });
+        } catch (err) {
+          // Manejo de error opcional
+        }
+      };
       loadObjective();
     }
-  }, [id]);
-
-  const loadObjective = async () => {
-    try {
-      setLoading(true);
-      const response = await objectiveService.getObjective(id);
-      const objective = response.data;
-      setFormData({
-        title: objective.title,
-        description: objective.description,
-        start_date: objective.start_date.split('T')[0],
-        end_date: objective.end_date.split('T')[0],
-        status: objective.status,
-        progress: objective.progress,
-      });
-    } catch (err) {
-      setError('Error al cargar el objetivo');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      if (isEditing) {
-        await objectiveService.updateObjective(id, formData);
-      } else {
-        await objectiveService.createObjective(formData);
-      }
-      navigate('/objectives');
-    } catch (err) {
-      setError(
-        isEditing
-          ? 'Error al actualizar el objetivo'
-          : 'Error al crear el objetivo'
-      );
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, isEditing, setFormData]);
 
   if (loading && isEditing) {
     return <div className="loading">Cargando objetivo...</div>;
@@ -88,10 +68,8 @@ const ObjectiveForm = () => {
       <div className="objective-form-header">
         <h2>{isEditing ? 'Editar Objetivo' : 'Nuevo Objetivo'}</h2>
       </div>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <form className="objective-form" onSubmit={handleSubmit}>
+      {errors?.general && <div className="error-message">{errors.general}</div>}
+      <BaseForm onSubmit={handleSubmit} loading={loading} error={errors?.general} onCancel={() => navigate('/objectives')}>
         <div className="form-group">
           <label htmlFor="title">Título</label>
           <input
@@ -103,8 +81,8 @@ const ObjectiveForm = () => {
             required
             placeholder="Ingrese el título del objetivo"
           />
+          {errors?.title && <div className="error-message">{errors.title}</div>}
         </div>
-
         <div className="form-group">
           <label htmlFor="description">Descripción</label>
           <textarea
@@ -115,8 +93,8 @@ const ObjectiveForm = () => {
             required
             placeholder="Ingrese la descripción del objetivo"
           />
+          {errors?.description && <div className="error-message">{errors.description}</div>}
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="start_date">Fecha de Inicio</label>
@@ -128,8 +106,8 @@ const ObjectiveForm = () => {
               onChange={handleChange}
               required
             />
+            {errors?.start_date && <div className="error-message">{errors.start_date}</div>}
           </div>
-
           <div className="form-group">
             <label htmlFor="end_date">Fecha de Fin</label>
             <input
@@ -140,9 +118,9 @@ const ObjectiveForm = () => {
               onChange={handleChange}
               required
             />
+            {errors?.end_date && <div className="error-message">{errors.end_date}</div>}
           </div>
         </div>
-
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="status">Estado</label>
@@ -157,8 +135,8 @@ const ObjectiveForm = () => {
               <option value="completed">Completado</option>
               <option value="cancelled">Cancelado</option>
             </select>
+            {errors?.status && <div className="error-message">{errors.status}</div>}
           </div>
-
           <div className="form-group">
             <label htmlFor="progress">Progreso (%)</label>
             <input
@@ -171,28 +149,13 @@ const ObjectiveForm = () => {
               max="100"
               required
             />
+            {errors?.progress && <div className="error-message">{errors.progress}</div>}
           </div>
         </div>
-
-        <div className="form-actions">
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={() => navigate('/objectives')}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={loading}
-          >
-            {isEditing ? 'Actualizar' : 'Crear'}
-          </button>
-        </div>
-      </form>
+      </BaseForm>
     </div>
   );
 };
 
+export default ObjectiveForm; 
 export default ObjectiveForm; 

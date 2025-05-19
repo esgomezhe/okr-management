@@ -1,87 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import BaseModal from './BaseModal';
+import BaseForm from '../forms/BaseForm';
+import { useForm } from '../../hooks/useForm';
+
+const initialState = {
+  title: '',
+  description: ''
+};
 
 const EpicModal = ({ mode, epic, onClose, onSave }) => {
-  const [form, setForm] = useState({
-    title: epic?.title || '',
-    description: epic?.description || ''
+  const {
+    formData,
+    errors,
+    loading,
+    handleChange,
+    handleSubmit,
+    setFormData
+  } = useForm(initialState, async (data) => {
+    if (mode === 'edit') {
+      await onSave(epic.id, data);
+    } else {
+      await onSave(data);
+    }
+    onClose();
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (mode === 'edit' && epic) {
-      setForm({
+      setFormData({
         title: epic.title || '',
         description: epic.description || ''
       });
+    } else {
+      setFormData(initialState);
     }
-  }, [mode, epic]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      if (mode === 'edit') {
-        await onSave(epic.id, form);
-      } else {
-        await onSave(form);
-      }
-    } catch (err) {
-      setError('Error al guardar la épica');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [mode, epic, setFormData]);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>{mode === 'edit' ? 'Editar Épica' : 'Nueva Épica'}</h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
+    <BaseModal isOpen={!!mode} onClose={onClose} title={mode === 'edit' ? 'Editar Épica' : 'Nueva Épica'} error={errors?.general} loading={loading}>
+      <BaseForm onSubmit={handleSubmit} loading={loading} onCancel={onClose} error={errors?.general}>
+        <div className="form-group">
+          <label htmlFor="epic-title">Título: </label>
+          <input
+            type="text"
+            id="epic-title"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="form-input"
+          />
+          {errors?.title && <div className="error-message">{errors.title}</div>}
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="epic-title">Título: </label>
-            <input
-              type="text"
-              id="epic-title"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              required
-              className="form-input"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="epic-description">Descripción: </label>
-            <textarea
-              id="epic-description"
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows="4"
-              className="form-textarea"
-            />
-          </div>
-          {error && <div className="error-message">{error}</div>}
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Guardando...' : 'Guardar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="form-group">
+          <label htmlFor="epic-description">Descripción: </label>
+          <textarea
+            id="epic-description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows="4"
+            className="form-textarea"
+          />
+          {errors?.description && <div className="error-message">{errors.description}</div>}
+        </div>
+      </BaseForm>
+    </BaseModal>
   );
 };
 

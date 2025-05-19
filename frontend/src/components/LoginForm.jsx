@@ -1,47 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../stylesheets/auth.css';
+import BaseForm from './forms/BaseForm';
+import { useForm } from '../hooks/useForm';
+
+const initialState = {
+  email: '',
+  password: '',
+};
 
 const LoginForm = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const onSubmit = async (data) => {
+    await login(data.email, data.password);
+    navigate('/');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      await login(formData.email, formData.password);
-      navigate('/');
-    } catch (err) {
-      setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    formData,
+    errors,
+    loading,
+    handleChange,
+    handleSubmit
+  } = useForm(initialState, onSubmit);
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Iniciar Sesión</h2>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit} className="auth-form">
+        <BaseForm onSubmit={handleSubmit} loading={loading} error={errors?.general}>
           <div className="form-group">
             <label htmlFor="email">Correo Electrónico</label>
             <input
@@ -53,8 +43,8 @@ const LoginForm = () => {
               required
               placeholder="tu@email.com"
             />
+            {errors?.email && <div className="error-message">{errors.email}</div>}
           </div>
-
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <input
@@ -66,17 +56,9 @@ const LoginForm = () => {
               required
               placeholder="••••••••"
             />
+            {errors?.password && <div className="error-message">{errors.password}</div>}
           </div>
-
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={loading}
-          >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
-
+        </BaseForm>
         <div className="auth-footer">
           <p>
             ¿No tienes una cuenta?{' '}

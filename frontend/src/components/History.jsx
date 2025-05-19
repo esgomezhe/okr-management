@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { historyService } from '../utils/apiServices';
 import '../stylesheets/history.css';
 
@@ -7,14 +7,16 @@ const History = ({ missionId, objectiveId, keyResultId, activityId, taskId }) =>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadHistory();
-  }, [missionId, objectiveId, keyResultId, activityId, taskId]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await historyService.getAll(missionId, objectiveId, keyResultId, activityId, taskId);
+      const response = await historyService.getAll(
+        missionId,
+        objectiveId,
+        keyResultId,
+        activityId,
+        taskId
+      );
       setHistory(response.data);
       setError(null);
     } catch (err) {
@@ -22,32 +24,28 @@ const History = ({ missionId, objectiveId, keyResultId, activityId, taskId }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, [missionId, objectiveId, keyResultId, activityId, taskId]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   const getChangeTypeLabel = (type) => {
-    switch (type) {
-      case 'create':
-        return 'Creación';
-      case 'update':
-        return 'Actualización';
-      case 'delete':
-        return 'Eliminación';
-      default:
-        return type;
-    }
+    const labels = {
+      create: 'Creación',
+      update: 'Actualización',
+      delete: 'Eliminación'
+    };
+    return labels[type] || type;
   };
 
   const getChangeTypeColor = (type) => {
-    switch (type) {
-      case 'create':
-        return '#2e7d32';
-      case 'update':
-        return '#1976d2';
-      case 'delete':
-        return '#d32f2f';
-      default:
-        return '#666';
-    }
+    const colors = {
+      create: '#2e7d32',
+      update: '#1976d2',
+      delete: '#d32f2f'
+    };
+    return colors[type] || '#666';
   };
 
   if (loading) return <div className="loading">Cargando historial...</div>;
@@ -56,7 +54,6 @@ const History = ({ missionId, objectiveId, keyResultId, activityId, taskId }) =>
   return (
     <div className="history">
       <h2>Historial de Cambios</h2>
-
       <div className="history-list">
         {history.map((item) => (
           <div key={item.id} className="history-item">

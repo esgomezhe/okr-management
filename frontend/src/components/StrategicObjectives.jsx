@@ -1,60 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { objectiveService } from '../utils/apiServices';
-import Modal from './Modal';
+import React, { useState } from 'react';
+import { BaseService } from '../utils/baseService';
 import '../stylesheets/strategicobjectives.css';
+import { useCRUD } from '../hooks/useCRUD';
+import BaseModal from './modals/BaseModal';
+import BaseForm from './forms/BaseForm';
+
+const objectiveService = new BaseService('objectives');
+
+const initialState = {
+  title: '',
+  description: '',
+  start_date: '',
+  end_date: '',
+  status: 'not_started'
+};
 
 const StrategicObjectives = ({ missionId }) => {
-  const [objectives, setObjectives] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    items: objectives,
+    loading,
+    error,
+    loadItems,
+    createItem,
+    updateItem,
+    deleteItem
+  } = useCRUD(objectiveService);
   const [showModal, setShowModal] = useState(false);
   const [editingObjective, setEditingObjective] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    status: 'not_started'
-  });
+  const [formData, setFormData] = useState(initialState);
 
-  useEffect(() => {
-    loadObjectives();
-  }, [missionId]);
+  React.useEffect(() => {
+    loadItems({ missionId });
+  }, [missionId, loadItems]);
 
-  const loadObjectives = async () => {
-    try {
-      setLoading(true);
-      const response = await objectiveService.getAll(missionId);
-      setObjectives(response.data);
-      setError(null);
-    } catch (err) {
-      setError('Error al cargar los objetivos estratégicos');
-    } finally {
-      setLoading(false);
+  const handleSave = async (data) => {
+    if (editingObjective) {
+      await updateItem(editingObjective.id, data);
+    } else {
+      await createItem(data);
     }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingObjective) {
-        await objectiveService.update(missionId, editingObjective.id, formData);
-      } else {
-        await objectiveService.create(missionId, formData);
-      }
-      setShowModal(false);
-      setEditingObjective(null);
-      setFormData({
-        title: '',
-        description: '',
-        start_date: '',
-        end_date: '',
-        status: 'not_started'
-      });
-      loadObjectives();
-    } catch (err) {
-      setError('Error al guardar el objetivo estratégico');
-    }
+    setShowModal(false);
+    setEditingObjective(null);
+    setFormData(initialState);
   };
 
   const handleEdit = (objective) => {
@@ -71,12 +58,7 @@ const StrategicObjectives = ({ missionId }) => {
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este objetivo estratégico?')) {
-      try {
-        await objectiveService.delete(missionId, id);
-        loadObjectives();
-      } catch (err) {
-        setError('Error al eliminar el objetivo estratégico');
-      }
+      await deleteItem(id);
     }
   };
 
@@ -91,31 +73,24 @@ const StrategicObjectives = ({ missionId }) => {
           + Nuevo Objetivo
         </button>
       </div>
-
       <div className="objectives-list">
         {objectives.map((objective) => (
           <div key={objective.id} className="objective-card">
             <div className="objective-header">
               <h3>{objective.title}</h3>
               <div className="objective-actions">
-                <button
-                  className="objective-edit-btn"
-                  onClick={() => handleEdit(objective)}
-                >
+                <button className="objective-edit-btn" onClick={() => handleEdit(objective)}>
                   Editar
                 </button>
-                <button
-                  className="objective-delete-btn"
-                  onClick={() => handleDelete(objective.id)}
-                >
+                <button className="objective-delete-btn" onClick={() => handleDelete(objective.id)}>
                   Eliminar
                 </button>
               </div>
             </div>
             <p>{objective.description}</p>
             <div className="objective-dates">
-              <span>Inicio: {new Date(objective.start_date).toLocaleDateString()}</span>
-              <span>Fin: {new Date(objective.end_date).toLocaleDateString()}</span>
+              <span>Inicio: {objective.start_date ? new Date(objective.start_date).toLocaleDateString() : 'Sin fecha'}</span>
+              <span>Fin: {objective.end_date ? new Date(objective.end_date).toLocaleDateString() : 'Sin fecha'}</span>
             </div>
             <div className="objective-status">
               <span className={`status-badge ${objective.status}`}>
@@ -128,23 +103,27 @@ const StrategicObjectives = ({ missionId }) => {
           </div>
         ))}
       </div>
-
-      <Modal
-        show={showModal}
+      <BaseModal
+        isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setEditingObjective(null);
-          setFormData({
-            title: '',
-            description: '',
-            start_date: '',
-            end_date: '',
-            status: 'not_started'
-          });
+          setFormData(initialState);
         }}
         title={editingObjective ? 'Editar Objetivo Estratégico' : 'Nuevo Objetivo Estratégico'}
       >
-        <form onSubmit={handleSubmit} className="objective-form">
+        <BaseForm
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await handleSave(formData);
+          }}
+          loading={loading}
+          onCancel={() => {
+            setShowModal(false);
+            setEditingObjective(null);
+            setFormData(initialState);
+          }}
+        >
           <div className="form-group">
             <label htmlFor="title">Título</label>
             <input
@@ -198,13 +177,8 @@ const StrategicObjectives = ({ missionId }) => {
               <option value="cancelled">Cancelado</option>
             </select>
           </div>
-          <div className="form-actions">
-            <button type="submit" className="submit-btn">
-              {editingObjective ? 'Actualizar' : 'Crear'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        </BaseForm>
+      </BaseModal>
     </div>
   );
 };

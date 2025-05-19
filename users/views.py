@@ -16,6 +16,7 @@ from .serializers import (
     ChangePasswordSerializer
 )
 from .models import Users
+from django.http import JsonResponse
 
 User = get_user_model()
 
@@ -131,3 +132,7 @@ class UsersViewSet(viewsets.ReadOnlyModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'detail': 'CSRF cookie set'})

@@ -1,62 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { keyResultService } from '../utils/apiServices';
-import Modal from './Modal';
+import React, { useState } from 'react';
+import { BaseService } from '../utils/baseService';
 import '../stylesheets/keyresults.css';
+import { useCRUD } from '../hooks/useCRUD';
+import BaseModal from './modals/BaseModal';
+import BaseForm from './forms/BaseForm';
+
+const keyResultService = new BaseService('keyresults');
+
+const initialState = {
+  title: '',
+  description: '',
+  target_value: '',
+  current_value: '0',
+  unit: '',
+  status: 'not_started'
+};
 
 const KeyResults = ({ missionId, objectiveId }) => {
-  const [keyResults, setKeyResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    items: keyResults,
+    loading,
+    error,
+    loadItems,
+    createItem,
+    updateItem,
+    deleteItem
+  } = useCRUD(keyResultService);
   const [showModal, setShowModal] = useState(false);
   const [editingKR, setEditingKR] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    target_value: '',
-    current_value: '0',
-    unit: '',
-    status: 'not_started'
-  });
+  const [formData, setFormData] = useState(initialState);
 
-  useEffect(() => {
-    loadKeyResults();
-  }, [missionId, objectiveId]);
+  React.useEffect(() => {
+    loadItems({ missionId, objectiveId });
+  }, [missionId, objectiveId, loadItems]);
 
-  const loadKeyResults = async () => {
-    try {
-      setLoading(true);
-      const response = await keyResultService.getAll(missionId, objectiveId);
-      setKeyResults(response.data);
-      setError(null);
-    } catch (err) {
-      setError('Error al cargar los resultados clave');
-    } finally {
-      setLoading(false);
+  const handleSave = async (data) => {
+    if (editingKR) {
+      await updateItem(editingKR.id, data);
+    } else {
+      await createItem(data);
     }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingKR) {
-        await keyResultService.update(missionId, objectiveId, editingKR.id, formData);
-      } else {
-        await keyResultService.create(missionId, objectiveId, formData);
-      }
-      setShowModal(false);
-      setEditingKR(null);
-      setFormData({
-        title: '',
-        description: '',
-        target_value: '',
-        current_value: '0',
-        unit: '',
-        status: 'not_started'
-      });
-      loadKeyResults();
-    } catch (err) {
-      setError('Error al guardar el resultado clave');
-    }
+    setShowModal(false);
+    setEditingKR(null);
+    setFormData(initialState);
   };
 
   const handleEdit = (kr) => {
@@ -74,21 +60,7 @@ const KeyResults = ({ missionId, objectiveId }) => {
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este resultado clave?')) {
-      try {
-        await keyResultService.delete(missionId, objectiveId, id);
-        loadKeyResults();
-      } catch (err) {
-        setError('Error al eliminar el resultado clave');
-      }
-    }
-  };
-
-  const handleProgressUpdate = async (id, currentValue) => {
-    try {
-      await keyResultService.updateProgress(missionId, objectiveId, id, currentValue);
-      loadKeyResults();
-    } catch (err) {
-      setError('Error al actualizar el progreso');
+      await deleteItem(id);
     }
   };
 
@@ -103,23 +75,16 @@ const KeyResults = ({ missionId, objectiveId }) => {
           + Nuevo Resultado Clave
         </button>
       </div>
-
       <div className="krs-list">
         {keyResults.map((kr) => (
           <div key={kr.id} className="kr-card">
             <div className="kr-header">
               <h3>{kr.title}</h3>
               <div className="kr-actions">
-                <button
-                  className="kr-edit-btn"
-                  onClick={() => handleEdit(kr)}
-                >
+                <button className="kr-edit-btn" onClick={() => handleEdit(kr)}>
                   Editar
                 </button>
-                <button
-                  className="kr-delete-btn"
-                  onClick={() => handleDelete(kr.id)}
-                >
+                <button className="kr-delete-btn" onClick={() => handleDelete(kr.id)}>
                   Eliminar
                 </button>
               </div>
@@ -127,10 +92,7 @@ const KeyResults = ({ missionId, objectiveId }) => {
             <p>{kr.description}</p>
             <div className="kr-progress">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill"
-                  style={{ width: `${kr.progress}%` }}
-                />
+                <div className="progress-fill" style={{ width: `${kr.progress}%` }} />
               </div>
               <div className="progress-values">
                 <span>{kr.current_value} / {kr.target_value} {kr.unit}</span>
@@ -148,24 +110,27 @@ const KeyResults = ({ missionId, objectiveId }) => {
           </div>
         ))}
       </div>
-
-      <Modal
-        show={showModal}
+      <BaseModal
+        isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setEditingKR(null);
-          setFormData({
-            title: '',
-            description: '',
-            target_value: '',
-            current_value: '0',
-            unit: '',
-            status: 'not_started'
-          });
+          setFormData(initialState);
         }}
         title={editingKR ? 'Editar Resultado Clave' : 'Nuevo Resultado Clave'}
       >
-        <form onSubmit={handleSubmit} className="kr-form">
+        <BaseForm
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await handleSave(formData);
+          }}
+          loading={loading}
+          onCancel={() => {
+            setShowModal(false);
+            setEditingKR(null);
+            setFormData(initialState);
+          }}
+        >
           <div className="form-group">
             <label htmlFor="title">Título</label>
             <input
@@ -236,13 +201,8 @@ const KeyResults = ({ missionId, objectiveId }) => {
               <option value="cancelled">Cancelado</option>
             </select>
           </div>
-          <div className="form-actions">
-            <button type="submit" className="submit-btn">
-              {editingKR ? 'Actualizar' : 'Crear'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        </BaseForm>
+      </BaseModal>
     </div>
   );
 };

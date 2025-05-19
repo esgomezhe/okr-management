@@ -7,7 +7,8 @@ from .views import (
     LogoutView,
     PasswordResetRequestView,
     ChangePasswordView,
-    UserDetailsView
+    UserDetailsView,
+    get_csrf_token
 )
 
 router = DefaultRouter()
@@ -20,5 +21,6 @@ urlpatterns = [
     path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('me/', UserDetailsView.as_view(), name='user_details'),
+    path('csrf/', get_csrf_token, name='get_csrf_token'),
     path('', include(router.urls)),
 ]

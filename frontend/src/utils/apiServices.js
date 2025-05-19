@@ -16,6 +16,9 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Interceptor de request: se ejecuta antes de cada petición para agregar los headers
@@ -55,12 +58,10 @@ apiClient.interceptors.response.use(
               withCredentials: true,
             }
           );
-          // Actualiza en localStorage el nuevo access token y, si aplica, el refresh token
           localStorage.setItem('access', data.access);
           if (data.refresh) {
             localStorage.setItem('refresh', data.refresh);
           }
-          // Actualiza la cabecera de la petición original con el nuevo token
           originalRequest.headers['Authorization'] = `Bearer ${data.access}`;
           return apiClient(originalRequest);
         } catch (refreshError) {
@@ -74,6 +75,11 @@ apiClient.interceptors.response.use(
 
 // --- Funciones de la API ---
 
+export const ensureCsrfToken = async () => {
+  // Hacemos un GET a una ruta pública para que Django envíe la cookie
+  await apiClient.get('/users/csrf/');
+};
+
 export const registerUser = async (
   username,
   email,
@@ -85,6 +91,7 @@ export const registerUser = async (
   password,
   password2
 ) => {
+  await ensureCsrfToken();
   const response = await apiClient.post(`/users/register/`, {
     user: { username, email, first_name, last_name },
     phone,
@@ -97,6 +104,7 @@ export const registerUser = async (
 };
 
 export const loginUser = async (username, password) => {
+  await ensureCsrfToken();
   const response = await apiClient.post(`/users/login/`, {
     username,
     password,
@@ -142,6 +150,7 @@ export const getUserDetails = async () => {
 };
 
 export const sendPasswordResetEmail = async (email) => {
+  await ensureCsrfToken();
   const response = await apiClient.post(`/users/reset-password/`, { email });
   return response.data;
 };
@@ -151,6 +160,7 @@ export const changePassword = async (
   newPassword,
   newPassword2
 ) => {
+  await ensureCsrfToken();
   try {
     const response = await apiClient.post(
       `/users/change-password/`,

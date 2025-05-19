@@ -1,55 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../stylesheets/auth.css';
+import BaseForm from './forms/BaseForm';
+import { useForm } from '../hooks/useForm';
+
+const initialState = {
+  name: '',
+  email: '',
+  password: '',
+  password_confirmation: '',
+};
 
 const RegisterForm = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const onSubmit = async (data) => {
+    if (data.password !== data.password_confirmation) {
+      throw { response: { data: { general: 'Las contraseñas no coinciden' } } };
+    }
+    await register(data.name, data.email, data.password);
+    navigate('/');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (formData.password !== formData.password_confirmation) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await register(formData.name, formData.email, formData.password);
-      navigate('/');
-    } catch (err) {
-      setError('Error al registrar usuario. Por favor, intenta de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    formData,
+    errors,
+    loading,
+    handleChange,
+    handleSubmit
+  } = useForm(initialState, onSubmit);
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Registro</h2>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit} className="auth-form">
+        <BaseForm onSubmit={handleSubmit} loading={loading} error={errors?.general}>
           <div className="form-group">
             <label htmlFor="name">Nombre</label>
             <input
@@ -61,8 +48,8 @@ const RegisterForm = () => {
               required
               placeholder="Tu nombre"
             />
+            {errors?.name && <div className="error-message">{errors.name}</div>}
           </div>
-
           <div className="form-group">
             <label htmlFor="email">Correo Electrónico</label>
             <input
@@ -74,8 +61,8 @@ const RegisterForm = () => {
               required
               placeholder="tu@email.com"
             />
+            {errors?.email && <div className="error-message">{errors.email}</div>}
           </div>
-
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <input
@@ -88,8 +75,8 @@ const RegisterForm = () => {
               placeholder="••••••••"
               minLength="8"
             />
+            {errors?.password && <div className="error-message">{errors.password}</div>}
           </div>
-
           <div className="form-group">
             <label htmlFor="password_confirmation">Confirmar Contraseña</label>
             <input
@@ -102,17 +89,9 @@ const RegisterForm = () => {
               placeholder="••••••••"
               minLength="8"
             />
+            {errors?.password_confirmation && <div className="error-message">{errors.password_confirmation}</div>}
           </div>
-
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={loading}
-          >
-            {loading ? 'Registrando...' : 'Registrarse'}
-          </button>
-        </form>
-
+        </BaseForm>
         <div className="auth-footer">
           <p>
             ¿Ya tienes una cuenta?{' '}
