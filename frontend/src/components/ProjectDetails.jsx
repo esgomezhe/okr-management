@@ -262,9 +262,8 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     try {
       setObjectiveLoading(true)
       const userDetails = await getUserDetails();
-      // Buscar el epicId al que pertenece el objetivo si no está en el modal
       let epicId = objectiveModal.epicId;
-      if (!epicId) {
+      if (!epicId && type !== 'project') {
         Object.keys(objectives).forEach(key => {
           if (objectives[key].some(obj => obj.id === objectiveId)) {
             epicId = key;
@@ -273,10 +272,13 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       }
       const updated = await updateObjective(objectiveId, {
         ...objectiveData,
-        epic: epicId,
+        ...(type !== 'project' ? { epic: epicId } : { project: projectId }),
         owner_id: userDetails.id
       })
       setObjectives(prev => {
+        if (type === 'project') {
+          return prev.map(o => o.id === objectiveId ? updated : o);
+        }
         const newObjectives = { ...prev }
         Object.keys(newObjectives).forEach(epicId => {
           newObjectives[epicId] = newObjectives[epicId].map(o => 
