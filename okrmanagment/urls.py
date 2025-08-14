@@ -3,10 +3,6 @@ from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from django.conf.urls.static import static
 from django.conf import settings
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
 from users.views import UserDetailsView
 
 urlpatterns = [
@@ -15,11 +11,6 @@ urlpatterns = [
     # Incluir las URLs de cada aplicación
     path('api/users/', include('users.urls')),
     path('api/okrs/', include('okrs.urls')),
-    
-    # Autenticación JWT
-    path('api/users/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/users/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/users/me/', UserDetailsView.as_view(), name='user_details'),
 ]
 
 # Servir archivos de medios y estáticos en desarrollo
