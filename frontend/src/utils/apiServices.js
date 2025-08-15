@@ -65,8 +65,19 @@ apiClient.interceptors.response.use(
           originalRequest.headers['Authorization'] = `Bearer ${data.access}`;
           return apiClient(originalRequest);
         } catch (refreshError) {
+          // Si el refresh token también expiró, limpiar localStorage y redirigir al login
+          localStorage.removeItem('access');
+          localStorage.removeItem('refresh');
+          // Disparar evento personalizado para notificar al contexto de autenticación
+          window.dispatchEvent(new CustomEvent('tokenExpired'));
           return Promise.reject(refreshError);
         }
+      } else {
+        // No hay refresh token, limpiar localStorage
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        // Disparar evento personalizado para notificar al contexto de autenticación
+        window.dispatchEvent(new CustomEvent('tokenExpired'));
       }
     }
     return Promise.reject(error);
@@ -120,23 +131,25 @@ export const loginUser = async (username, password) => {
 
 export const logoutUser = async () => {
   try {
-  const refreshToken = localStorage.getItem('refresh');
-  const accessToken = localStorage.getItem('access');
+    const refreshToken = localStorage.getItem('refresh');
+    const accessToken = localStorage.getItem('access');
     if (refreshToken && accessToken) {
-  await apiClient.post(
-    `/users/logout/`,
-    { refresh: refreshToken },
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    }
-  );
+      await apiClient.post(
+        `/users/logout/`,
+        { refresh: refreshToken },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
     }
   } catch (error) {
     // Siempre limpiamos el localStorage, incluso si hay error
-  localStorage.removeItem('access');
-  localStorage.removeItem('refresh');
+  } finally {
+    // Asegurar que siempre se limpie el localStorage
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
   }
 };
 

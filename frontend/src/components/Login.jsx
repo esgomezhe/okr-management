@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { registerUser, loginUser } from '../utils/apiServices';
 import { AuthContext } from '../contexts/AuthContext';
 import '../stylesheets/login.css';
@@ -18,6 +18,7 @@ function Login() {
   const [errors, setErrors] = useState({});
   const { user, login, loading } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Handlers para los campos del formulario
   const handleUsernameChange = (event) => {
@@ -69,10 +70,17 @@ function Login() {
   // Función para manejar el inicio de sesión
   const handleLogin = async () => {
     try {
+      // Limpiar localStorage antes de intentar iniciar sesión
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      
       const data = await loginUser(username, password);
       await login(data.access);
       setErrors({});
-      navigate('/dashboard/missions');
+      
+      // Redirigir a la página original o al dashboard por defecto
+      const from = location.state?.from?.pathname || '/dashboard/missions';
+      navigate(from, { replace: true });
     } catch (error) {
       if (error.response && error.response.data.detail) {
         setErrors({ detail: error.response.data.detail });
@@ -92,6 +100,10 @@ function Login() {
     }
 
     try {
+      // Limpiar localStorage antes de intentar registrar
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      
       await registerUser(
         username,
         email,

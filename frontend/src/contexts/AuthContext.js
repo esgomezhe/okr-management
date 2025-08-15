@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
         })
         .catch((error) => {
+          // Si hay error al obtener detalles del usuario, limpiar localStorage
+          clearAuthData();
           setLoading(false);
         });
     } else {
@@ -46,6 +48,19 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // Escuchar evento de token expirado
+  useEffect(() => {
+    const handleTokenExpired = () => {
+      clearAuthData();
+    };
+
+    window.addEventListener('tokenExpired', handleTokenExpired);
+
+    return () => {
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
+  }, []);
+
   const login = async (accessToken) => {
     localStorage.setItem('access', accessToken);
     try {
@@ -60,8 +75,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const clearAuthData = () => {
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, clearAuthData, loading }}>
       {children}
     </AuthContext.Provider>
   );

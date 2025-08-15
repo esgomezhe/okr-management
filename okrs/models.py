@@ -51,10 +51,30 @@ class Project(models.Model):
     
     def get_logs(self):
         return self.logs.all()
+    
+    def is_member(self, user):
+        """Verifica si un usuario es miembro del proyecto"""
+        return self.members.filter(id=user.id).exists()
+    
+    def get_member_role(self, user):
+        """Obtiene el rol de un usuario en el proyecto"""
+        try:
+            member = self.projectmembers_set.get(user=user)
+            return member.role
+        except ProjectMembers.DoesNotExist:
+            return None
 
 class ProjectMembers(models.Model):
+    ROLE_CHOICES = (
+        ('owner', 'Owner'),
+        ('manager', 'Manager'),
+        ('member', 'Member'),
+        ('viewer', 'Viewer'),
+    )
+    
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -63,7 +83,35 @@ class ProjectMembers(models.Model):
         verbose_name_plural = 'Project Members'
     
     def __str__(self):
-        return f"{self.user} in {self.project}"
+        return f"{self.user} - {self.role} in {self.project}"
+    
+    def can_edit_project(self):
+        """Verifica si el miembro puede editar el proyecto"""
+        return self.role in ['owner', 'manager']
+    
+    def can_create_epics(self):
+        """Verifica si el miembro puede crear épicas"""
+        return self.role in ['owner', 'manager']
+    
+    def can_create_objectives(self):
+        """Verifica si el miembro puede crear objetivos"""
+        return self.role in ['owner', 'manager']
+    
+    def can_edit_okrs(self):
+        """Verifica si el miembro puede editar OKRs"""
+        return self.role in ['owner', 'manager', 'member']
+    
+    def can_edit_activities(self):
+        """Verifica si el miembro puede editar actividades"""
+        return self.role in ['owner', 'manager', 'member']
+    
+    def can_edit_tasks(self):
+        """Verifica si el miembro puede editar tareas"""
+        return self.role in ['owner', 'manager', 'member']
+    
+    def can_assign_tasks(self):
+        """Verifica si el miembro puede asignar tareas"""
+        return self.role in ['owner', 'manager']
 
 class Epic(models.Model):
     project = models.ForeignKey(Project, related_name='epics', on_delete=models.CASCADE)
@@ -217,6 +265,25 @@ class Task(models.Model):
     def save(self, *args, **kwargs):
         self.completion_percentage = PROGRESS_DICT.get(self.status, 0)
         super().save(*args, **kwargs)
+    
+    def can_user_edit(self, user):
+        """Verifica si un usuario puede editar esta tarea"""
+        # El asignado puede editar su tarea
+        if self.assignee and self.assignee.id == user.id:
+            return True
+        
+        # Los managers y admins pueden editar cualquier tarea
+        if user.role in ['admin', 'manager']:
+            return True
+        
+        # Verificar si el usuario es manager del proyecto
+        project = self.activity.okr.objective.project or self.activity.okr.objective.epic.project
+        if project and project.is_member(user):
+            member_role = project.get_member_role(user)
+            if member_role in ['owner', 'manager']:
+                return True
+        
+        return False
 
 class Log(models.Model):
     project = models.ForeignKey(Project, related_name='logs', on_delete=models.CASCADE, null=True, blank=True)
