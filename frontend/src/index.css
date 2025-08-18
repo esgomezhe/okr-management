@@ -1,16 +1,56 @@
+/* ============================================= */
+/* SISTEMA DE DISEÑO GLOBAL             */
+/* ============================================= */
+:root {
+  /* Paleta de Colores */
+  --color-primary: #007bff;       /* Azul principal para botones, enlaces */
+  --color-primary-dark: #0056b3;  /* Azul más oscuro para hover */
+  --color-secondary: #6c757d;     /* Gris para texto secundario */
+  --color-success: #28a745;       /* Verde para acciones exitosas */
+  --color-danger: #dc3545;        /* Rojo para errores o alertas */
+  --color-background: #f8f9fa;    /* Color de fondo principal */
+  --color-surface: #ffffff;       /* Color para tarjetas y contenedores */
+  --color-text-primary: #212529;  /* Color de texto principal (oscuro) */
+  --color-text-secondary: #6c757d;/* Color de texto secundario (gris) */
+  --color-border: #dee2e6;       /* Color para bordes */
+
+  /* Tipografía */
+  --font-family-headings: 'Poppins', sans-serif;
+  --font-family-body: 'Poppins', sans-serif; /* Puedes usar otra si quieres */
+  --font-family-code: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  /* Espaciado (usa múltiplos de 8px para consistencia) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* Otros */
+  --border-radius: 0.3rem;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition-speed: 200ms ease-in-out;
+}
+
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-family-body); /* <-- USANDO VARIABLE */
+  font-size: var(--font-size-base);     /* <-- BUENA PRÁCTICA AÑADIR */
+  line-height: var(--line-height-base); /* <-- BUENA PRÁCTICA AÑADIR */
+  color: var(--color-text-primary);     /* <-- BUENA PRÁCTICA AÑADIR */
+  background-color: var(--color-background); /* <-- BUENA PRÁCTICA AÑADIR */
 }
 
-h3,
-h2,
-h1,
-h4,
-h5 {
-  font-family: "Poppins", sans-serif;
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-family-headings); /* <-- USANDO VARIABLE */
 }
 
 p {
@@ -18,6 +58,5 @@ p {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: var(--font-family-code); /* <-- USANDO VARIABLE */
 }
