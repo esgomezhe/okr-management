@@ -1,5 +1,6 @@
 import React, { useEffect, useContext } from 'react';
-import { Link, useNavigate, useLocation } from "react-router-dom";
+// Paso 1: Importamos NavLink y ya no necesitamos useLocation
+import { NavLink, Link, useNavigate } from "react-router-dom"; 
 import { AuthContext } from '../contexts/AuthContext';
 import { logoutUser } from '../utils/apiServices';
 import '../stylesheets/header.css';
@@ -7,10 +8,13 @@ import '../stylesheets/header.css';
 function Header() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const location = useLocation();
+  // Paso 2: Ya no necesitamos 'useLocation' ni la función 'isActive'
 
   useEffect(() => {
+    // Este bloque de código para manejar el menú móvil no necesita cambios.
+    // Se deja tal cual para que la funcionalidad del menú en celular siga intacta.
     const navbar = document.getElementById('navbar');
+    if (!navbar) return;
 
     const handleMobileNavToggle = (e) => {
       navbar.classList.toggle('navbar-mobile');
@@ -25,46 +29,23 @@ function Header() {
       }
     };
 
-    const handleScrollTo = (hash) => {
-      const targetElement = document.querySelector(hash);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    };
-
     const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
     if (mobileNavToggle) {
       mobileNavToggle.addEventListener('click', handleMobileNavToggle);
     }
 
     const dropdownLinks = document.querySelectorAll('.navbar .dropdown > a');
-    if (dropdownLinks) {
-      dropdownLinks.forEach(item => {
-        item.addEventListener('click', handleDropdownClick, true);
-      });
-    }
-
-    const scrollToLinks = document.querySelectorAll('.scrollto');
-    if (scrollToLinks) {
-      scrollToLinks.forEach(item => {
-        item.addEventListener('click', (e) => handleScrollTo(e.target.hash), true);
-      });
-    }
+    dropdownLinks.forEach(item => {
+      item.addEventListener('click', handleDropdownClick, true);
+    });
 
     return () => {
       if (mobileNavToggle) {
         mobileNavToggle.removeEventListener('click', handleMobileNavToggle);
       }
-      if (dropdownLinks) {
-        dropdownLinks.forEach(item => {
-          item.removeEventListener('click', handleDropdownClick, true);
-        });
-      }
-      if (scrollToLinks) {
-        scrollToLinks.forEach(item => {
-          item.removeEventListener('click', (e) => handleScrollTo(e.target.hash), true);
-        });
-      }
+      dropdownLinks.forEach(item => {
+        item.removeEventListener('click', handleDropdownClick, true);
+      });
     };
   }, []);
 
@@ -74,14 +55,9 @@ function Header() {
       logout();
       navigate('/login/');
     } catch (error) {
-      // Aún así, forzamos el cierre de sesión local
       logout();
       navigate('/login/');
     }
-  };
-
-  const isActive = (path) => {
-    return location.pathname === path;
   };
 
   return (
@@ -92,29 +68,31 @@ function Header() {
             <img
               className='header--image'
               src={require('../img/wirk_logo.jpg')}
-              alt="Cámara de Comercio de Cali"
+              alt="Wirk Consulting Logo"
+              loading="lazy"
             />
           </Link>
         </div>
         <nav id="navbar" className="navbar">
           <ul>
-              {user ? (
-                <>
-                <li className={`nav-item ${isActive('/dashboard/missions')}`}>
-                  <Link to='/dashboard/missions'>Misiones</Link>
+            {user ? (
+              <>
+                {/* Paso 3: Reemplazamos Link por NavLink y aplicamos la clase directamente */}
+                <li>
+                  <NavLink className="nav-link" to='/dashboard/missions'>Misiones</NavLink>
                 </li>
-                <li className={`nav-item ${isActive('/dashboard/projects')}`}>
-                  <Link to='/dashboard/projects'>Proyectos</Link>
+                <li>
+                  <NavLink className="nav-link" to='/dashboard/projects'>Proyectos</NavLink>
                 </li>
-                <li className="dropdown">
-                  <Link to='#' onClick={handleLogout}>Salir</Link>
+                <li>
+                  <a href="#" onClick={handleLogout}>Salir</a>
                 </li>
-                </>
-              ) : (
-              <li className="dropdown">
-                <Link to='/login/'>Iniciar Sesión</Link>
+              </>
+            ) : (
+              <li>
+                <NavLink className="nav-link" to='/login/'>Iniciar Sesión</NavLink>
               </li>
-              )}
+            )}
           </ul>
           <i className="bi bi-list mobile-nav-toggle"></i>
         </nav>

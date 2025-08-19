@@ -4,6 +4,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import ProjectCard from "./ProjectCard";
 import CreateMissionModal from "./CreateMissionModal";
 import "../stylesheets/dashboard.css";
+import LoadingSpinner from './LoadingSpinner'; 
 
 const MissionsDashboard = () => {
   const { user, loading } = useContext(AuthContext);
@@ -62,8 +63,8 @@ const MissionsDashboard = () => {
   };
 
   if (loading || loadingMissions) {
-    return <div className="loading-container">Cargando misiones...</div>;
-  }
+  return <LoadingSpinner />; // <-- Usa el nuevo componente
+}
 
   if (error) {
     return <div className="error-container">{error}</div>;
@@ -75,22 +76,31 @@ const MissionsDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Planificador de Misiones</h2>
-        <p className="dashboard-description">
-          Usa esta plantilla para hacer un seguimiento de todas tus misiones y objetivos estratégicos. Abre cada misión haciendo clic
-          en el desplegable para ver los objetivos y OKRs. Asigna fechas límite y actualiza los estados para estar al tanto de
-          tus misiones.
-        </p>
-        <div className="dashboard-actions">
-          <button 
-            className="new-project-btn"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Nueva Misión
-          </button>
+      
+      {/* --- SECCIÓN DEL ENCABEZADO CORREGIDA --- */}
+      <div className="header">
+        <div className="header-top-row">
+          <div className="dashboard-header">
+            <h2>Planificador de Misiones</h2>
+          </div>
+          <div className="dashboard-actions">
+            <button 
+              className="new-project-btn"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Nueva Misión
+            </button>
+          </div>
+        </div>
+        <div className="dashboard-description">
+          <p>
+            Usa esta plantilla para hacer un seguimiento de todas tus misiones y objetivos estratégicos. Abre cada misión haciendo clic
+            en el desplegable para ver los objetivos y OKRs. Asigna fechas límite y actualiza los estados para estar al tanto de
+            tus misiones.
+          </p>
         </div>
       </div>
+      {/* --- FIN DE LA SECCIÓN CORREGIDA --- */}
 
       <div className="projects-table">
         <div className="table-header">
@@ -138,4 +148,4 @@ const MissionsDashboard = () => {
   );
 };
 
-export default MissionsDashboard; 
+export default MissionsDashboard;

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+// Paso 1: Importamos NavLink en lugar de Link y ya no necesitamos useLocation
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../stylesheets/navigation.css';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
-  const location = useLocation();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleLogout = async () => {
@@ -16,16 +16,14 @@ const Navigation = () => {
     }
   };
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  // Paso 2: Ya no necesitamos la función 'isActive' ni 'useLocation'
 
   return (
     <nav className="navigation">
       <div className="nav-header">
-        <Link to="/" className="logo">
+        <NavLink to="/" className="logo"> {/* <-- Cambiado a NavLink */}
           OKR Management
-        </Link>
+        </NavLink>
         <button
           className="mobile-menu-btn"
           onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -36,80 +34,81 @@ const Navigation = () => {
 
       <div className={`nav-content ${showMobileMenu ? 'show' : ''}`}>
         <div className="nav-links">
-          <Link
+          {/* Paso 3: Reemplazamos todos los Link por NavLink y simplificamos la clase */}
+          <NavLink
             to="/"
-            className={`nav-link ${isActive('/') ? 'active' : ''}`}
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={() => setShowMobileMenu(false)}
           >
             Dashboard
-          </Link>
-          <Link
-            to="/missions"
-            className={`nav-link ${isActive('/missions') ? 'active' : ''}`}
+          </NavLink>
+          <NavLink
+            to="/dashboard/missions"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={() => setShowMobileMenu(false)}
           >
             Misiones
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/objectives"
-            className={`nav-link ${isActive('/objectives') ? 'active' : ''}`}
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={() => setShowMobileMenu(false)}
           >
             Objetivos
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/key-results"
-            className={`nav-link ${isActive('/key-results') ? 'active' : ''}`}
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={() => setShowMobileMenu(false)}
           >
             Resultados Clave
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/activities"
-            className={`nav-link ${isActive('/activities') ? 'active' : ''}`}
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={() => setShowMobileMenu(false)}
           >
             Actividades
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/tasks"
-            className={`nav-link ${isActive('/tasks') ? 'active' : ''}`}
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={() => setShowMobileMenu(false)}
           >
             Tareas
-          </Link>
+          </NavLink>
         </div>
 
         <div className="nav-footer">
           {user ? (
             <>
-              <Link
+              <NavLink
                 to="/profile"
-                className={`nav-link ${isActive('/profile') ? 'active' : ''}`}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={() => setShowMobileMenu(false)}
               >
                 Perfil
-              </Link>
+              </NavLink>
               <button className="logout-btn" onClick={handleLogout}>
                 Cerrar sesión
               </button>
             </>
           ) : (
             <>
-              <Link
+              <NavLink
                 to="/login"
-                className={`nav-link ${isActive('/login') ? 'active' : ''}`}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={() => setShowMobileMenu(false)}
               >
                 Iniciar sesión
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/register"
-                className={`nav-link ${isActive('/register') ? 'active' : ''}`}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={() => setShowMobileMenu(false)}
               >
                 Registrarse
-              </Link>
+              </NavLink>
             </>
           )}
         </div>
@@ -118,4 +117,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation; 
+export default Navigation;

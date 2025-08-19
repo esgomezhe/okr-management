@@ -4,6 +4,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import ProjectCard from "./ProjectCard";
 import CreateProjectModal from "./CreateProjectModal";
 import "../stylesheets/dashboard.css";
+import LoadingSpinner from "./LoadingSpinner"; // Se importa el spinner
 
 const ProjectsDashboard = () => {
   const { user, loading } = useContext(AuthContext);
@@ -60,8 +61,9 @@ const ProjectsDashboard = () => {
     );
   };
 
+  // Se usa el componente LoadingSpinner para consistencia
   if (loading || loadingProjects) {
-    return <div className="loading-container">Cargando proyectos...</div>;
+    return <LoadingSpinner />;
   }
 
   if (error) {
@@ -74,24 +76,31 @@ const ProjectsDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Planificador de Proyectos</h2>
-        <p className="dashboard-description">
-          Usa esta plantilla para hacer un seguimiento de todos tus proyectos. Abre cada proyecto haciendo clic
-          en el desplegable para ver los objetivos y OKRs. Asigna fechas límite y actualiza los estados para estar al tanto de
-          tus proyectos.
-        </p>
-        <div className="dashboard-actions">
-          <button 
-            className="new-project-btn"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Nuevo Proyecto
-          </button>
+      
+      {/* Panel 1: El Encabezado de Proyectos (con la estructura corregida) */}
+      <div className="header content-panel">
+        <div className="header-top-row">
+          <div className="dashboard-header">
+            <h2>Planificador de Proyectos</h2>
+          </div>
+          <div className="dashboard-actions">
+            <button 
+              className="new-project-btn"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Nuevo Proyecto
+            </button>
+          </div>
+        </div>
+        <div className="dashboard-description">
+          <p>
+            Usa esta plantilla para hacer un seguimiento de todos tus proyectos. Abre cada proyecto haciendo clic en el desplegable para ver los objetivos y OKRs.
+          </p>
         </div>
       </div>
 
-      <div className="projects-table">
+      {/* Panel 2: La Tabla de Proyectos */}
+      <div className="projects-table content-panel">
         <div className="table-header">
           <div className="column-estado">Estado</div>
           <div className="column-proyecto">Proyecto</div>
@@ -137,4 +146,4 @@ const ProjectsDashboard = () => {
   );
 };
 
-export default ProjectsDashboard; 
+export default ProjectsDashboard;

@@ -280,3 +280,8 @@
 .navbar-mobile .dropdown>.dropdown-active {
   display: block;
 }
+  
+nav a.active {
+  color: var(--color-primary); /* <-- Nuestra variable para el color azul */
+  font-weight: var(--font-weight-bold); /* Opcional: lo pone en negrita */
+}
