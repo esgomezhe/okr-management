@@ -1,13 +1,15 @@
 import React, { useEffect, useContext } from 'react';
-// Paso 1: Importamos NavLink y ya no necesitamos useLocation
 import { NavLink, Link, useNavigate } from "react-router-dom"; 
 import { AuthContext } from '../contexts/AuthContext';
 import { logoutUser } from '../utils/apiServices';
 import '../stylesheets/header.css';
+import { usePermissions } from '../hooks/usePermissions';
 
 function Header() {
   const { user, logout } = useContext(AuthContext);
+  console.log('Usuario para permisos:', user);
   const navigate = useNavigate();
+  const { isAdmin, isManager } = usePermissions();
   // Paso 2: Ya no necesitamos 'useLocation' ni la función 'isActive'
 
   useEffect(() => {
@@ -75,20 +77,24 @@ function Header() {
         </div>
         <nav id="navbar" className="navbar">
           <ul>
-            {user ? (
+            {user ? ( // Si el usuario está logueado...
               <>
-                {/* Paso 3: Reemplazamos Link por NavLink y aplicamos la clase directamente */}
-                <li>
-                  <NavLink className="nav-link" to='/dashboard/missions'>Misiones</NavLink>
-                </li>
-                <li>
-                  <NavLink className="nav-link" to='/dashboard/projects'>Proyectos</NavLink>
-                </li>
-                <li>
-                  <a href="#" onClick={handleLogout}>Salir</a>
-                </li>
+                {isManager ? (
+                  // Si es Manager o Admin, muestra estos enlaces
+                  <>
+                    <li><NavLink className="nav-link" to='/dashboard/missions'>Misiones</NavLink></li>
+                    <li><NavLink className="nav-link" to='/dashboard/projects'>Proyectos</NavLink></li>
+                  </>
+                ) : (
+                  // Si NO es Manager (es decir, es Empleado), muestra este enlace
+                  <li><NavLink className="nav-link" to='/dashboard/employee'>Mi Panel</NavLink></li>
+                )}
+
+                {/* El botón de Salir es para todos los usuarios logueados */}
+                <li><a href="#" onClick={handleLogout}>Salir</a></li>
               </>
             ) : (
+              // Si no hay sesión iniciada
               <li>
                 <NavLink className="nav-link" to='/login/'>Iniciar Sesión</NavLink>
               </li>

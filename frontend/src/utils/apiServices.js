@@ -545,3 +545,19 @@ export const deleteTask = async (taskId) => {
 };
 
 export default api;
+
+// Funciones temporales para el dashboard de empleado
+export const getMyTasks = async () => { 
+  console.log("Llamando a getMyTasks (aún no implementado)");
+  return { results: [] }; 
+};
+
+export const getMyProjects = async () => { 
+  console.log("Llamando a getMyProjects (aún no implementado)");
+  return { results: [] }; 
+};
+
+export const getMyOKRs = async () => { 
+  console.log("Llamando a getMyOKRs (aún no implementado)");
+  return { results: [] }; 
+};

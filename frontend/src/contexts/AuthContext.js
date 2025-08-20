@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { getUserDetails } from '../utils/apiServices';
+// Importamos también la función 'loginUser' desde la API
+import { getUserDetails, loginUser } from '../utils/apiServices';
 
 export const AuthContext = createContext();
 
@@ -9,80 +10,60 @@ export const AuthProvider = ({ children }) => {
 
   // Al iniciar, intenta obtener los datos del usuario usando el token en localStorage
   useEffect(() => {
-    const access = localStorage.getItem('access');
-    if (access) {
-      getUserDetails()
-        .then((userData) => {
-          setUser({ ...userData, token: access });
-          setLoading(false);
-        })
-        .catch((error) => {
-          // Si hay error al obtener detalles del usuario, limpiar localStorage
+    const bootstrapAuth = async () => {
+      const access = localStorage.getItem('access');
+      if (access) {
+        try {
+          const userData = await getUserDetails();
+          setUser(userData);
+        } catch (error) {
+          // Si el token es inválido, limpiamos los datos
           clearAuthData();
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  // Sincroniza el token entre pestañas usando el evento "storage"
-  useEffect(() => {
-    const syncAuth = (event) => {
-      if (event.key === 'access') {
-        const newToken = event.newValue;
-        if (newToken) {
-          getUserDetails()
-            .then((userData) => setUser({ ...userData, token: newToken }))
-            .catch(() => {});
-        } else {
-          setUser(null);
         }
       }
+      setLoading(false);
     };
-
-    window.addEventListener('storage', syncAuth);
-
-    return () => {
-      window.removeEventListener('storage', syncAuth);
-    };
+    bootstrapAuth();
   }, []);
-
-  // Escuchar evento de token expirado
-  useEffect(() => {
-    const handleTokenExpired = () => {
-      clearAuthData();
-    };
-
-    window.addEventListener('tokenExpired', handleTokenExpired);
-
-    return () => {
-      window.removeEventListener('tokenExpired', handleTokenExpired);
-    };
-  }, []);
-
-  const login = async (accessToken) => {
-    localStorage.setItem('access', accessToken);
-    try {
-      const userData = await getUserDetails();
-      setUser({ ...userData, token: accessToken });
-    } catch (error) {}
-  };
-
-  const logout = () => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
-    setUser(null);
-  };
 
   const clearAuthData = () => {
     localStorage.removeItem('access');
     localStorage.removeItem('refresh');
     setUser(null);
   };
+  
+  // --- FUNCIÓN LOGIN CORREGIDA ---
+  // Ahora acepta 'username' y 'password'
+  const login = async (username, password) => {
+    try {
+      // 1. Llama a la API para obtener los tokens
+      const tokenData = await loginUser(username, password);
+      localStorage.setItem('access', tokenData.access);
+      localStorage.setItem('refresh', tokenData.refresh);
+      
+      // 2. Con el token, obtén los detalles completos del usuario
+      const userData = await getUserDetails();
+      setUser(userData); // Guarda el usuario en el estado global
+
+      // 3. Devuelve los datos del usuario para la redirección
+      return userData;
+
+    } catch (error) {
+      console.error("Error en el proceso de login:", error);
+      clearAuthData(); // Limpia todo si hay un error
+      throw error;     // Lanza el error para que el formulario lo muestre
+    }
+  };
+
+  const logout = () => {
+    // La función logoutUser de la API debería llamarse aquí idealmente,
+    // pero por ahora solo limpiamos los datos locales.
+    clearAuthData();
+  };
+
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, clearAuthData, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
