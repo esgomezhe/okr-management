@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { registerUser, loginUser } from '../utils/apiServices';
+import { registerUser } from '../utils/apiServices';
 import { AuthContext } from '../contexts/AuthContext';
 import '../stylesheets/login.css';
 
@@ -74,8 +74,7 @@ function Login() {
       localStorage.removeItem('access');
       localStorage.removeItem('refresh');
       
-      const data = await loginUser(username, password);
-      await login(data.access);
+      await login(username, password);
       setErrors({});
       
       // Redirigir a la página original o al dashboard por defecto

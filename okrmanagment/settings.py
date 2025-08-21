@@ -25,16 +25,15 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-
 if DEBUG:
     ALLOWED_HOSTS = config('DEV_ALLOWED_HOSTS', cast=Csv())
-    CORS_ALLOWED_ORIGINS = config('DEV_CORS_ALLOW_ORIGINS', cast=Csv()) 
+    CORS_ALLOWED_ORIGINS = config('DEV_CORS_ALLOW_ORIGINS', cast=Csv())
     CSRF_TRUSTED_ORIGINS = config('DEV_CSRF_TRUSTED_ORIGINS', cast=Csv())
 else:
     ALLOWED_HOSTS = config('PROD_ALLOWED_HOSTS', cast=Csv())
     CORS_ALLOW_ORIGINS = config('PROD_CORS_ALLOW_ORIGINS', cast=Csv())
     CSRF_TRUSTED_ORIGINS = config('PROD_CSRF_TRUSTED_ORIGINS', cast=Csv())
-    CORS_ALLOW_ALL_ORIGINS = False  # Desactivar en producción
+    CORS_ALLOW_ALL_ORIGINS = True  # Desactivar en producción
 
 # Application definition
 DJANGO_APPS = [
@@ -61,7 +60,7 @@ INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',      
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
