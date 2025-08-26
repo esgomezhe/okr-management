@@ -47,13 +47,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user.users)
 
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsProjectMember])
+    @action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated, IsProjectMember])
     def members(self, request, pk=None):
-        """Obtener miembros del proyecto"""
+        """Obtener y agregar miembros del proyecto"""
         project = self.get_object()
-        members = ProjectMembers.objects.filter(project=project)
-        serializer = ProjectMembersSerializer(members, many=True)
-        return Response(serializer.data)
+        
+        if request.method == 'GET':
+            members = ProjectMembers.objects.filter(project=project)
+            serializer = ProjectMembersSerializer(members, many=True)
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            serializer = AddProjectMemberSerializer(data=request.data, context={'project': project})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'], url_path='members/(?P<user_id>[^/.]+)', permission_classes=[permissions.IsAuthenticated, CanManageProjectMembers])
+    def remove_member_by_id(self, request, pk=None, user_id=None):
+        """Eliminar miembro del proyecto por ID de usuario"""
+        project = self.get_object()
+        try:
+            member = ProjectMembers.objects.get(project=project, user_id=user_id)
+            member.delete()
+            return Response({'message': 'Miembro eliminado exitosamente'}, status=status.HTTP_204_NO_CONTENT)
+        except ProjectMembers.DoesNotExist:
+            return Response({'error': 'Usuario no es miembro de este proyecto'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, CanManageProjectMembers])
     def add_member(self, request, pk=None):
