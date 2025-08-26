@@ -162,6 +162,43 @@ export const getUserDetails = async () => {
   }
 };
 
+
+export const getAllUsers = async () => {
+  try {
+    const response = await apiClient.get('/api/users/'); 
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getProjectMembers = async (projectId) => {
+  try {
+    const response = await apiClient.get(`/api/okrs/projects/${projectId}/members/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching members, returning empty array.", error);
+    return []; 
+  }
+};
+
+export const addMemberToProject = async (projectId, userId, role) => {
+  try {
+    const response = await apiClient.post(`/api/okrs/projects/${projectId}/members/`, { user_id: userId, role });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const removeMemberFromProject = async (projectId, userId) => {
+  try {
+    await apiClient.delete(`/api/okrs/projects/${projectId}/members/${userId}/`);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const sendPasswordResetEmail = async (email) => {
   await ensureCsrfToken();
   const response = await apiClient.post(`/users/reset-password/`, { email });

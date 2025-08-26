@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { LoginRegister, PasswordReset, ChangePassword } from "./pages/AllPages";
 import { AuthProvider } from './contexts/AuthContext';
@@ -9,9 +9,10 @@ import MissionsDashboard from './components/MissionsDashboard';
 import ProjectsDashboard from './components/ProjectsDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuthCleanup } from './hooks/useAuthCleanup';
+import { ensureCsrfToken } from './utils/apiServices';
+import ProjectDetailsPage from './pages/ProjectDetailsPage';
 
 function AppContent() {
-  // Usar el hook de limpieza de autenticación
   useAuthCleanup();
 
   return (
@@ -29,6 +30,13 @@ function AppContent() {
             <ProjectsDashboard />
           </ProtectedRoute>
         } />
+
+        <Route path='/dashboard/projects/:projectId' element={
+  <ProtectedRoute>
+    <ProjectDetailsPage />
+  </ProtectedRoute>
+} />
+
         <Route path='/login/' element={<LoginRegister />} />
         <Route path='/forgot-password/' element={<PasswordReset />} />
         <Route path='/change-password/' element={<ChangePassword />} />
@@ -41,6 +49,10 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    ensureCsrfToken();
+  }, []);
+
   return (
     <AuthProvider>
       <AppContent />

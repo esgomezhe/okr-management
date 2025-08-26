@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getProjectDetails, getEpics, createEpic, updateEpic, deleteEpic, getObjectives, createObjective, updateObjective, deleteObjective, getUserDetails, getOKRs, createOKR, updateOKR, deleteOKR, getActivities, createActivity, updateActivity, deleteActivity, getTasks, createTask, updateTask, deleteTask } from "../utils/apiServices"
+import { getProjectDetails, getEpics, createEpic, updateEpic, deleteEpic, getObjectives, createObjective, updateObjective, deleteObjective, getUserDetails, getOKRs, createOKR, updateOKR, deleteOKR, getActivities, createActivity, updateActivity, deleteActivity, getTasks, createTask, updateTask, deleteTask, getProjectMembers, getAllUsers, addMemberToProject, removeMemberFromProject } from "../utils/apiServices"
 import "../stylesheets/projectdetails.css"
 
 const ProjectDetails = ({ projectId, type = "project" }) => {
@@ -27,6 +27,13 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
   const [taskModal, setTaskModal] = useState({ show: false, mode: 'create', task: null, activityId: null })
   const [taskLoading, setTaskLoading] = useState(false)
   const [taskError, setTaskError] = useState(null)
+  const [members, setMembers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState(null);
+
+  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedRole, setSelectedRole] = useState('employee');
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -165,6 +172,32 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       fetchTasks()
     }
   }, [activities])
+
+  useEffect(() => {
+    const fetchMembersData = async () => {
+      try {
+        setMembersLoading(true);
+        setMembersError(null);
+        
+        const membersResponse = await getProjectMembers(projectId);
+        const allUsersResponse = await getAllUsers();
+
+       
+        setMembers(membersResponse.results || membersResponse || []);
+        setAllUsers(allUsersResponse.results || allUsersResponse || []);
+
+        setMembersLoading(false);
+      } catch (err) {
+        setMembersError("No se pudieron cargar los miembros del proyecto.");
+        setMembersLoading(false);
+      }
+    };
+
+
+    if (projectId) {
+      fetchMembersData();
+    }
+  }, [projectId]); 
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -523,6 +556,33 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     }
   }
 
+  const handleAddMember = async () => {
+    if (!selectedUser) {
+      alert('Por favor, selecciona un usuario.');
+      return;
+    }
+    try {
+      await addMemberToProject(projectId, selectedUser, selectedRole);
+      // Refrescar la lista de miembros para ver el nuevo integrante
+      const membersResponse = await getProjectMembers(projectId);
+      setMembers(membersResponse.results || membersResponse || []);
+      setSelectedUser(''); // Limpiar el selector
+    } catch (error) {
+      alert('Error al añadir el miembro. El backend podría no estar listo todavía.');
+    }
+  };
+
+  const handleRemoveMember = async (userId) => {
+    if (!window.confirm("¿Seguro que deseas eliminar a este miembro del proyecto?")) return;
+    try {
+      await removeMemberFromProject(projectId, userId);
+      // Refrescar la lista de miembros eliminando el que ya no está
+      setMembers(prev => prev.filter(member => member.user.id !== userId));
+    } catch (error) {
+      alert('Error al eliminar el miembro. El backend podría no estar listo todavía.');
+    }
+  };
+
   const handleDeleteTask = async (activityId, taskId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return
     try {
@@ -562,6 +622,46 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       </span>
     </div>
   )
+
+  const renderMembers = () => (
+    <div className="members-section" style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #eee', borderRadius: '8px' }}>
+      <h3 style={{ marginTop: 0 }}>Miembros del Proyecto</h3>
+      {membersLoading && <p>Cargando miembros...</p>}
+      {membersError && <p style={{ color: 'red' }}>{membersError}</p>}
+      
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {members.map(member => (
+          <li key={member.user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid #f0f0f0' }}>
+            <span>{member.user.first_name} {member.user.last_name} ({member.role})</span>
+            <button className="btn btn-danger" onClick={() => handleRemoveMember(member.user.id)}>
+              Eliminar
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <div className="add-member-form" style={{ marginTop: '1.5rem' }}>
+        <h4>Añadir Nuevo Miembro</h4>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} style={{ flex: 1, padding: '8px' }}>
+            <option value="">Selecciona un usuario</option>
+            {allUsers
+              .filter(user => !members.some(member => member.user.id === user.id)) // Filtra para no mostrar usuarios que ya son miembros
+              .map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name} ({user.username})
+                </option>
+            ))}
+          </select>
+          <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} style={{ padding: '8px' }}>
+            <option value="employee">Empleado</option>
+            <option value="manager">Manager</option>
+          </select>
+          <button className="btn btn-primary" onClick={handleAddMember}>Añadir</button>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderTasks = (activityId) => {
     const activityTasks = tasks[activityId] || []
@@ -805,11 +905,13 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         <p className="project-description">{details.description}</p>
       </div>
       <div className="details-content">
+        {renderMembers()}
         {type === "mission"
           ? renderEpics(epics)
           : renderObjectivesProject(objectives)}
       </div>
       {okrModal.show && (
+// ... y el resto del código ...
         <OKRModal
           show={okrModal.show}
           onClose={() => setOKRModal({ show: false, mode: 'create', okr: null, objectiveId: null })}

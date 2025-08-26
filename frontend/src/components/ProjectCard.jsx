@@ -4,6 +4,7 @@ import { deleteMission, deleteProject } from '../utils/apiServices';
 import EditModal from './EditModal';
 import ProjectDetails from './ProjectDetails';
 import "../stylesheets/project-card.css"
+import { Link } from 'react-router-dom';
 
 const EditIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -32,7 +33,6 @@ const MenuPortal = ({ children, position }) => {
 };
 
 const ProjectCard = ({ project, type = "project", onDelete, onUpdate }) => {
-  const [showDetails, setShowDetails] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [error, setError] = useState(null);
@@ -81,9 +81,6 @@ const ProjectCard = ({ project, type = "project", onDelete, onUpdate }) => {
     }
   }, [showMenu]);
 
-  const toggleDetails = () => {
-    setShowDetails(!showDetails);
-  };
 
   const getStatusClass = () => {
     if (project.status === "completed") return "status-completed";
@@ -122,11 +119,10 @@ const ProjectCard = ({ project, type = "project", onDelete, onUpdate }) => {
         </div>
 
         <div className="column-proyecto">
-          <div className="project-title" onClick={toggleDetails} tabIndex={0} role="button" aria-pressed={showDetails}>
-            <span className={`toggle-icon ${showDetails ? "open" : ""}`}>▶</span>
-            <span className="project-name">{project.name}</span>
-          </div>
-        </div>
+        <Link to={`/dashboard/projects/${project.id}`} className="project-title-link">
+          <span className="project-name">{project.name}</span>
+        </Link>
+      </div>
 
         <div className="column-fecha">{project.end_date || "Sin fecha"}</div>
 
@@ -182,7 +178,6 @@ const ProjectCard = ({ project, type = "project", onDelete, onUpdate }) => {
         </div>
       </div>
 
-      {showDetails && <ProjectDetails projectId={project.id} type={type} />}
 
       {error && <div className="error-message">{error}</div>}
 
