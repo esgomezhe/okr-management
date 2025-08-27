@@ -32,14 +32,20 @@ function AppContent() {
         } />
 
         <Route path='/dashboard/projects/:projectId' element={
-  <ProtectedRoute>
-    <ProjectDetailsPage />
-  </ProtectedRoute>
-} />
+          <ProtectedRoute>
+            <ProjectDetailsPage />
+          </ProtectedRoute>
+        } />
 
         <Route path='/login/' element={<LoginRegister />} />
         <Route path='/forgot-password/' element={<PasswordReset />} />
-        <Route path='/change-password/' element={<ChangePassword />} />
+        
+        <Route path='/change-password/' element={
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
+        } />
+        
         <Route path='*' element={<NotFound />} />
       </Routes>
       <Footer />

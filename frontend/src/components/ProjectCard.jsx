@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { deleteMission, deleteProject } from '../utils/apiServices';
 import EditModal from './EditModal';
@@ -192,4 +192,4 @@ const ProjectCard = ({ project, type = "project", onDelete, onUpdate }) => {
   );
 };
 
-export default ProjectCard;
+export default memo(ProjectCard);

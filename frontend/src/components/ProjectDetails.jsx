@@ -1,203 +1,104 @@
-import { useEffect, useState } from "react"
-import { getProjectDetails, getEpics, createEpic, updateEpic, deleteEpic, getObjectives, createObjective, updateObjective, deleteObjective, getUserDetails, getOKRs, createOKR, updateOKR, deleteOKR, getActivities, createActivity, updateActivity, deleteActivity, getTasks, createTask, updateTask, deleteTask, getProjectMembers, getAllUsers, addMemberToProject, removeMemberFromProject } from "../utils/apiServices"
-import "../stylesheets/projectdetails.css"
+import { useEffect, useState } from "react";
+import { getProjectDetails, getEpics, createEpic, updateEpic, deleteEpic, getObjectives, createObjective, updateObjective, deleteObjective, getUserDetails, getOKRs, createOKR, updateOKR, deleteOKR, getActivities, createActivity, updateActivity, deleteActivity, getTasks, createTask, updateTask, deleteTask, getProjectMembers, getAllUsers, addMemberToProject, removeMemberFromProject } from "../utils/apiServices";
+import "../stylesheets/projectdetails.css";
 
 const ProjectDetails = ({ projectId, type = "project" }) => {
-  const [details, setDetails] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [expandedSections, setExpandedSections] = useState({})
-  const [epics, setEpics] = useState([])
-  const [epicModal, setEpicModal] = useState({ open: false, mode: 'create', epic: null })
-  const [epicLoading, setEpicLoading] = useState(false)
-  const [epicError, setEpicError] = useState(null)
-  const [objectives, setObjectives] = useState(type === 'project' ? [] : {})
-  const [objectiveModal, setObjectiveModal] = useState({ open: false, mode: 'create', objective: null, epicId: null })
-  const [objectiveLoading, setObjectiveLoading] = useState(false)
-  const [objectiveError, setObjectiveError] = useState(null)
-  const [okrs, setOKRs] = useState({})
-  const [okrModal, setOKRModal] = useState({ show: false, mode: 'create', okr: null, objectiveId: null })
-  const [okrLoading, setOKRLoading] = useState(false)
-  const [okrError, setOKRError] = useState(null)
-  const [activities, setActivities] = useState({})
-  const [activityModal, setActivityModal] = useState({ show: false, mode: 'create', activity: null, okrId: null })
-  const [activityLoading, setActivityLoading] = useState(false)
-  const [activityError, setActivityError] = useState(null)
-  const [tasks, setTasks] = useState({})
-  const [taskModal, setTaskModal] = useState({ show: false, mode: 'create', task: null, activityId: null })
-  const [taskLoading, setTaskLoading] = useState(false)
-  const [taskError, setTaskError] = useState(null)
+  const [details, setDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
+  const [epics, setEpics] = useState([]);
+  const [epicModal, setEpicModal] = useState({ open: false, mode: 'create', epic: null });
+  const [objectives, setObjectives] = useState(type === 'project' ? [] : {});
+  const [objectiveModal, setObjectiveModal] = useState({ open: false, mode: 'create', objective: null, epicId: null });
+  const [okrs, setOKRs] = useState({});
+  const [okrModal, setOKRModal] = useState({ show: false, mode: 'create', okr: null, objectiveId: null });
+  const [activities, setActivities] = useState({});
+  const [activityModal, setActivityModal] = useState({ show: false, mode: 'create', activity: null, okrId: null });
+  const [tasks, setTasks] = useState({});
+  const [taskModal, setTaskModal] = useState({ show: false, mode: 'create', task: null, activityId: null });
   const [members, setMembers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [membersLoading, setMembersLoading] = useState(false);
-  const [membersError, setMembersError] = useState(null);
-
   const [selectedUser, setSelectedUser] = useState('');
   const [selectedRole, setSelectedRole] = useState('employee');
 
   useEffect(() => {
-    const fetchProjectDetails = async () => {
+    const fetchAllData = async () => {
+      if (!projectId) return;
+      setLoading(true);
+      setError(null);
       try {
-        const data = await getProjectDetails(projectId, type)
-        setDetails(data)
-        setLoading(false)
-        if (type === "project" && data.objectives) {
-          setObjectives(data.objectives)
+        const [detailsData, membersData, allUsersData] = await Promise.all([
+          getProjectDetails(projectId, type),
+          getProjectMembers(projectId),
+          getAllUsers()
+        ]);
+        setDetails(detailsData);
+        setMembers(membersData.results || membersData || []);
+        setAllUsers(allUsersData.results || allUsersData || []);
+        let objectivesToFetch = [];
+        if (type === 'project' && detailsData.objectives) {
+          objectivesToFetch = detailsData.objectives;
+          setObjectives(detailsData.objectives);
+        } else if (type === 'mission') {
+          const epicsData = await getEpics(projectId);
+          const fetchedEpics = epicsData.results || [];
+          setEpics(fetchedEpics);
+          const objectivesPromises = fetchedEpics.map(epic => getObjectives(epic.id));
+          const objectivesResponses = await Promise.all(objectivesPromises);
+          const objectivesByEpic = {};
+          objectivesResponses.forEach((response, index) => {
+            const epicId = fetchedEpics[index].id;
+            const epicObjectives = response.results || [];
+            objectivesByEpic[epicId] = epicObjectives;
+            objectivesToFetch.push(...epicObjectives);
+          });
+          setObjectives(objectivesByEpic);
         }
-      } catch (err) {
-        setError(`No se pudieron cargar los detalles del ${type}.`)
-        setLoading(false)
-      }
-    }
-    fetchProjectDetails()
-  }, [projectId, type])
-
-  useEffect(() => {
-    if (type === "mission") {
-      const fetchEpics = async () => {
-        try {
-          setEpicLoading(true)
-          const data = await getEpics(projectId)
-          setEpics(data.results || [])
-          setEpicLoading(false)
-        } catch (err) {
-          setEpicError("No se pudieron cargar las épicas.")
-          setEpicLoading(false)
-        }
-      }
-      fetchEpics()
-    }
-  }, [projectId, type])
-
-  useEffect(() => {
-    const fetchObjectives = async () => {
-      try {
-        setObjectiveLoading(true)
-        const objectivesData = {}
-        for (const epic of epics) {
-          const data = await getObjectives(epic.id)
-          objectivesData[epic.id] = data.results || []
-        }
-        setObjectives(objectivesData)
-        setObjectiveLoading(false)
-      } catch (err) {
-        setObjectiveError("No se pudieron cargar los objetivos.")
-        setObjectiveLoading(false)
-      }
-    }
-    if (epics.length > 0) {
-      fetchObjectives()
-    }
-  }, [epics])
-
-  useEffect(() => {
-    const fetchOKRs = async () => {
-      try {
-        const okrsData = {}
-        if (type === "project") {
-          // Para proyectos, objectives es un array
-          for (const objective of objectives) {
-            if (objective && objective.id) {
-              const data = await getOKRs(objective.id)
-              okrsData[objective.id] = data.results || []
-            }
-          }
-        } else {
-          // Para misiones, objectives es un objeto por épica
-          for (const epicId in objectives) {
-            const epicObjectives = objectives[epicId] || []
-            for (const objective of epicObjectives) {
-              if (objective && objective.id) {
-                const data = await getOKRs(objective.id)
-                okrsData[objective.id] = data.results || []
-              }
+        if (objectivesToFetch.length > 0) {
+          const okrsPromises = objectivesToFetch.map(obj => getOKRs(obj.id));
+          const okrsResponses = await Promise.all(okrsPromises);
+          const okrsByObjective = {};
+          const allOkrs = [];
+          okrsResponses.forEach((response, index) => {
+            const objectiveId = objectivesToFetch[index].id;
+            const objectiveOkrs = response.results || [];
+            okrsByObjective[objectiveId] = objectiveOkrs;
+            allOkrs.push(...objectiveOkrs);
+          });
+          setOKRs(okrsByObjective);
+          if (allOkrs.length > 0) {
+            const activitiesPromises = allOkrs.map(okr => getActivities(okr.id));
+            const activitiesResponses = await Promise.all(activitiesPromises);
+            const activitiesByOkr = {};
+            const allActivities = [];
+            activitiesResponses.forEach((response, index) => {
+              const okrId = allOkrs[index].id;
+              const okrActivities = response.results || [];
+              activitiesByOkr[okrId] = okrActivities;
+              allActivities.push(...okrActivities);
+            });
+            setActivities(activitiesByOkr);
+            if (allActivities.length > 0) {
+              const tasksPromises = allActivities.map(act => getTasks(act.id));
+              const tasksResponses = await Promise.all(tasksPromises);
+              const tasksByActivity = {};
+              tasksResponses.forEach((response, index) => {
+                const activityId = allActivities[index].id;
+                tasksByActivity[activityId] = response.results || [];
+              });
+              setTasks(tasksByActivity);
             }
           }
         }
-        setOKRs(okrsData)
       } catch (err) {
-        setOKRError("No se pudieron cargar los OKRs.")
-      }
-    }
-    if (
-      (type === "project" && Array.isArray(objectives) && objectives.length > 0) ||
-      (type === "mission" && Object.keys(objectives).length > 0)
-    ) {
-      fetchOKRs()
-    }
-  }, [objectives, type])
-
-  useEffect(() => {
-    const fetchActivities = async () => {
-      const newActivities = {}
-      for (const [okrId, okrList] of Object.entries(okrs)) {
-        // okrList es un array de OKRs por objetivo
-        for (const okr of okrList) {
-          if (okr && okr.id) {
-            try {
-              const activitiesData = await getActivities(okr.id)
-              newActivities[okr.id] = activitiesData.results || []
-            } catch (error) {
-              setActivityError(prev => ({ ...prev, [okr.id]: error.message }))
-            }
-          }
-        }
-      }
-      setActivities(newActivities)
-    }
-
-    // Solo ejecuta si hay al menos un OKR cargado
-    const hasOKRs = Object.values(okrs).some(arr => Array.isArray(arr) && arr.length > 0)
-    if (hasOKRs) {
-      fetchActivities()
-    }
-  }, [okrs])
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const newTasks = {}
-      for (const [okrId, okrActivities] of Object.entries(activities)) {
-        for (const activity of okrActivities) {
-          try {
-            const data = await getTasks(activity.id)
-            newTasks[activity.id] = data.results || []
-          } catch (error) {
-            newTasks[activity.id] = []
-          }
-        }
-      }
-      setTasks(newTasks)
-    }
-    if (Object.keys(activities).length > 0) {
-      fetchTasks()
-    }
-  }, [activities])
-
-  useEffect(() => {
-    const fetchMembersData = async () => {
-      try {
-        setMembersLoading(true);
-        setMembersError(null);
-        
-        const membersResponse = await getProjectMembers(projectId);
-        const allUsersResponse = await getAllUsers();
-
-       
-        setMembers(membersResponse.results || membersResponse || []);
-        setAllUsers(allUsersResponse.results || allUsersResponse || []);
-
-        setMembersLoading(false);
-      } catch (err) {
-        setMembersError("No se pudieron cargar los miembros del proyecto.");
-        setMembersLoading(false);
+        setError(`No se pudieron cargar todos los datos del ${type}. Por favor, recarga la página.`);
+      } finally {
+        setLoading(false);
       }
     };
-
-
-    if (projectId) {
-      fetchMembersData();
-    }
-  }, [projectId]); 
+    fetchAllData();
+  }, [projectId, type]);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -206,10 +107,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     }))
   }
 
-  // CRUD épicas
   const handleCreateEpic = async (epicData) => {
+    setLoading(true);
     try {
-      setEpicLoading(true)
       const userDetails = await getUserDetails();
       const newEpic = await createEpic({ 
         ...epicData, 
@@ -218,15 +118,16 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       })
       setEpics((prev) => [newEpic, ...prev])
       setEpicModal({ open: false, mode: 'create', epic: null })
-      setEpicLoading(false)
     } catch (err) {
-      setEpicError("Error al crear la épica")
-      setEpicLoading(false)
+      setError("Error al crear la épica")
+    } finally {
+      setLoading(false);
     }
   }
+  
   const handleUpdateEpic = async (epicId, epicData) => {
+    setLoading(true);
     try {
-      setEpicLoading(true)
       const userDetails = await getUserDetails();
       const updated = await updateEpic(epicId, {
         ...epicData,
@@ -235,29 +136,29 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       })
       setEpics((prev) => prev.map(e => e.id === epicId ? updated : e))
       setEpicModal({ open: false, mode: 'create', epic: null })
-      setEpicLoading(false)
     } catch (err) {
-      setEpicError("Error al actualizar la épica")
-      setEpicLoading(false)
-    }
-  }
-  const handleDeleteEpic = async (epicId) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta épica?")) return
-    try {
-      setEpicLoading(true)
-      await deleteEpic(epicId)
-      setEpics((prev) => prev.filter(e => e.id !== epicId))
-      setEpicLoading(false)
-    } catch (err) {
-      setEpicError("Error al eliminar la épica")
-      setEpicLoading(false)
+      setError("Error al actualizar la épica")
+    } finally {
+      setLoading(false);
     }
   }
 
-  // CRUD objetivos
-  const handleCreateObjective = async (objectiveData) => {
+  const handleDeleteEpic = async (epicId) => {
+    if (!window.confirm("¿Seguro que deseas eliminar esta épica?")) return
+    setLoading(true);
     try {
-      setObjectiveLoading(true)
+      await deleteEpic(epicId)
+      setEpics((prev) => prev.filter(e => e.id !== epicId))
+    } catch (err) {
+      setError("Error al eliminar la épica")
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleCreateObjective = async (objectiveData) => {
+    setLoading(true);
+    try {
       const userDetails = await getUserDetails();
       let newObjective;
       if (type === 'project') {
@@ -269,8 +170,8 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         setObjectives(prev => [newObjective, ...(prev || [])]);
       } else {
         if (!objectiveModal.epicId) {
-          setObjectiveError("Debes seleccionar una épica para crear un objetivo.");
-          setObjectiveLoading(false);
+          setError("Debes seleccionar una épica para crear un objetivo.");
+          setLoading(false);
           return;
         }
         newObjective = await createObjective({
@@ -284,16 +185,16 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         }));
       }
       setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })
-      setObjectiveLoading(false)
     } catch (err) {
-      setObjectiveError("Error al crear el objetivo")
-      setObjectiveLoading(false)
+      setError("Error al crear el objetivo")
+    } finally {
+      setLoading(false);
     }
   }
 
   const handleUpdateObjective = async (objectiveId, objectiveData) => {
+    setLoading(true);
     try {
-      setObjectiveLoading(true)
       const userDetails = await getUserDetails();
       let epicId = objectiveModal.epicId;
       if (!epicId && type !== 'project') {
@@ -321,17 +222,17 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         return newObjectives
       })
       setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })
-      setObjectiveLoading(false)
     } catch (err) {
-      setObjectiveError("Error al actualizar el objetivo")
-      setObjectiveLoading(false)
+      setError("Error al actualizar el objetivo")
+    } finally {
+      setLoading(false);
     }
   }
 
   const handleDeleteObjective = async (objectiveId) => {
     if (!window.confirm("¿Seguro que deseas eliminar este objetivo?")) return
+    setLoading(true);
     try {
-      setObjectiveLoading(true)
       await deleteObjective(objectiveId)
       if (type === 'project') {
         setObjectives(prev => prev.filter(obj => obj.id !== objectiveId))
@@ -344,18 +245,16 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
           return newObjectives
         })
       }
-      setObjectiveLoading(false)
     } catch (err) {
-      setObjectiveError("Error al eliminar el objetivo")
-      setObjectiveLoading(false)
+      setError("Error al eliminar el objetivo")
+    } finally {
+      setLoading(false);
     }
   }
 
-  // CRUD OKRs
   const handleCreateOKR = async (objectiveId, data) => {
+    setLoading(true);
     try {
-      setOKRLoading(true)
-      setOKRError(null)
       const userDetails = await getUserDetails()
       const okrData = {
         ...data,
@@ -369,16 +268,15 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       }))
       setOKRModal({ show: false, mode: 'create', okr: null, objectiveId: null })
     } catch (error) {
-      setOKRError(error.message)
+      setError(error.message)
     } finally {
-      setOKRLoading(false)
+      setLoading(false);
     }
   }
 
   const handleUpdateOKR = async (okrId, data) => {
+    setLoading(true);
     try {
-      setOKRLoading(true)
-      setOKRError(null)
       const userDetails = await getUserDetails();
       const updatedOKR = await updateOKR(okrId, {
         ...data,
@@ -396,16 +294,15 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       })
       setOKRModal({ show: false, mode: 'create', okr: null, objectiveId: null })
     } catch (error) {
-      setOKRError(error.message)
+      setError(error.message)
     } finally {
-      setOKRLoading(false)
+      setLoading(false);
     }
   }
 
   const handleDeleteOKR = async (okrId) => {
+    setLoading(true);
     try {
-      setOKRLoading(true)
-      setOKRError(null)
       await deleteOKR(okrId)
       setOKRs(prev => {
         const newOKRs = { ...prev }
@@ -415,16 +312,15 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         return newOKRs
       })
     } catch (error) {
-      setOKRError(error.message)
+      setError(error.message)
     } finally {
-      setOKRLoading(false)
+      setLoading(false);
     }
   }
 
   const handleCreateActivity = async (okrId, data) => {
+    setLoading(true);
     try {
-      setActivityLoading(true)
-      setActivityError(null)
       const userDetails = await getUserDetails()
       const activityData = {
         ...data,
@@ -439,18 +335,16 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       setActivityModal({ show: false, mode: 'create', activity: null, okrId: null })
     } catch (error) {
       const msg = error?.response?.data?.detail || error?.message || 'Error al crear la actividad'
-      setActivityError(msg)
+      setError(msg)
     } finally {
-      setActivityLoading(false)
+      setLoading(false);
     }
   }
 
   const handleUpdateActivity = async (activityId, data) => {
+    setLoading(true);
     try {
-      setActivityLoading(true)
-      setActivityError(null)
       const userDetails = await getUserDetails();
-      // Buscar el okrId al que pertenece la actividad
       let okrId = null;
       Object.keys(activities).forEach(key => {
         if (activities[key].some(act => act.id === activityId)) {
@@ -473,9 +367,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       })
       setActivityModal({ show: false, mode: 'create', activity: null, okrId: null })
     } catch (error) {
-      setActivityError(error.message)
+      setError(error.message)
     } finally {
-      setActivityLoading(false)
+      setLoading(false);
     }
   }
 
@@ -483,26 +377,23 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta actividad?')) {
       return
     }
-
+    setLoading(true);
     try {
-      setActivityLoading(true)
-      setActivityError(null)
       await deleteActivity(activityId)
       setActivities(prev => ({
       ...prev,
         [okrId]: prev[okrId].filter(activity => activity.id !== activityId)
       }))
     } catch (error) {
-      setActivityError(error.message)
+      setError(error.message)
     } finally {
-      setActivityLoading(false)
+      setLoading(false);
     }
   }
 
   const handleCreateTask = async (activityId, data) => {
+    setLoading(true);
     try {
-      setTaskLoading(true)
-      setTaskError(null)
       const userDetails = await getUserDetails()
       const taskData = {
         ...data,
@@ -516,17 +407,15 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       }))
       setTaskModal({ show: false, mode: 'create', task: null, activityId: null })
     } catch (error) {
-      setTaskError(error?.response?.data?.detail || error?.message || 'Error al crear la tarea')
+      setError(error?.response?.data?.detail || error?.message || 'Error al crear la tarea')
     } finally {
-      setTaskLoading(false)
+      setLoading(false);
     }
   }
 
   const handleUpdateTask = async (taskId, data) => {
+    setLoading(true);
     try {
-      setTaskLoading(true)
-      setTaskError(null)
-      // Buscar el activityId al que pertenece la tarea
       let activityId = null;
       Object.keys(tasks).forEach(key => {
         if (tasks[key].some(task => task.id === taskId)) {
@@ -550,53 +439,56 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       })
       setTaskModal({ show: false, mode: 'create', task: null, activityId: null })
     } catch (error) {
-      setTaskError(error?.response?.data?.detail || error?.message || 'Error al actualizar la tarea')
+      setError(error?.response?.data?.detail || error?.message || 'Error al actualizar la tarea')
     } finally {
-      setTaskLoading(false)
+      setLoading(false);
     }
   }
-
+  
   const handleAddMember = async () => {
     if (!selectedUser) {
       alert('Por favor, selecciona un usuario.');
       return;
     }
+    setLoading(true);
     try {
       await addMemberToProject(projectId, selectedUser, selectedRole);
-      // Refrescar la lista de miembros para ver el nuevo integrante
       const membersResponse = await getProjectMembers(projectId);
       setMembers(membersResponse.results || membersResponse || []);
-      setSelectedUser(''); // Limpiar el selector
+      setSelectedUser('');
     } catch (error) {
-      alert('Error al añadir el miembro. El backend podría no estar listo todavía.');
+      setError('Error al añadir el miembro. El backend podría no estar listo todavía.');
+    } finally {
+        setLoading(false);
     }
   };
 
   const handleRemoveMember = async (userId) => {
     if (!window.confirm("¿Seguro que deseas eliminar a este miembro del proyecto?")) return;
+    setLoading(true);
     try {
       await removeMemberFromProject(projectId, userId);
-      // Refrescar la lista de miembros eliminando el que ya no está
       setMembers(prev => prev.filter(member => member.user.id !== userId));
     } catch (error) {
-      alert('Error al eliminar el miembro. El backend podría no estar listo todavía.');
+      setError('Error al eliminar el miembro. El backend podría no estar listo todavía.');
+    } finally {
+        setLoading(false);
     }
   };
 
   const handleDeleteTask = async (activityId, taskId) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return
+    setLoading(true);
     try {
-      setTaskLoading(true)
-      setTaskError(null)
       await deleteTask(taskId)
       setTasks(prev => ({
         ...prev,
         [activityId]: prev[activityId].filter(task => task.id !== taskId)
       }))
     } catch (error) {
-      setTaskError(error?.response?.data?.detail || error?.message || 'Error al eliminar la tarea')
+      setError(error?.response?.data?.detail || error?.message || 'Error al eliminar la tarea')
     } finally {
-      setTaskLoading(false)
+      setLoading(false);
     }
   }
 
@@ -622,12 +514,10 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
       </span>
     </div>
   )
-
+  
   const renderMembers = () => (
     <div className="members-section" style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #eee', borderRadius: '8px' }}>
       <h3 style={{ marginTop: 0 }}>Miembros del Proyecto</h3>
-      {membersLoading && <p>Cargando miembros...</p>}
-      {membersError && <p style={{ color: 'red' }}>{membersError}</p>}
       
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {members.map(member => (
@@ -646,7 +536,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
           <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} style={{ flex: 1, padding: '8px' }}>
             <option value="">Selecciona un usuario</option>
             {allUsers
-              .filter(user => !members.some(member => member.user.id === user.id)) // Filtra para no mostrar usuarios que ya son miembros
+              .filter(user => !members.some(member => member.user.id === user.id))
               .map(user => (
                 <option key={user.id} value={user.id}>
                   {user.first_name} {user.last_name} ({user.username})
@@ -677,8 +567,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             + Nueva Tarea
           </button>
         </div>
-        {taskLoading && <div className="task-loading">Cargando tareas...</div>}
-        {taskError && <div className="task-error">{taskError}</div>}
+        
         {activityTasks.length > 0 ? activityTasks.map((task) => (
           <div key={task.id} className="task-item">
             <div className="task-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -692,14 +581,14 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             </div>
           </div>
         )) : <p className="no-tasks" style={{fontSize:'12px',color:'#b3b3b3'}}>No hay tareas asociadas</p>}
-                          </div>
+      </div>
     )
   }
 
   const renderActivities = (okrId) => {
     const okrActivities = activities[okrId] || []
     return (
-                            <div className="activities-container">
+      <div className="activities-container">
         <div className="activities-header">
           <span style={{fontSize:'13px',fontWeight:500}}>Actividades</span>
           <button
@@ -710,8 +599,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             Agregar Actividad
           </button>
         </div>
-        {activityLoading && <div className="activity-loading">Cargando actividades...</div>}
-        {activityError && <div className="activity-error">Error: {activityError}</div>}
+        
         {okrActivities.map(activity => (
           <div key={activity.id} className="activity-item">
             <div className="activity-header" onClick={() => toggleSection(`activity-${activity.id}`)} style={{cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -743,7 +631,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             )}
           </div>
         ))}
-                                  </div>
+      </div>
     )
   }
 
@@ -761,9 +649,8 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
             Agregar OKR
           </button>
         </div>
-        {okrLoading && <div className="okr-loading">Cargando...</div>}
-        {okrError && <div className="okr-error">{okrError}</div>}
-        {objectiveOKRs.length === 0 && !okrLoading && !okrError && (
+        
+        {(objectiveOKRs.length === 0) && (
           <div className="okr-empty">No hay OKRs para este objetivo.</div>
         )}
         {objectiveOKRs.map(okr => (
@@ -808,9 +695,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
               </button>
             </div>
             {expandedSections[`okr-${okr.id}`] && renderActivities(okr.id)}
-                                        </div>
-                                      ))}
-                                    </div>
+          </div>
+        ))}
+      </div>
     )
   }
 
@@ -826,8 +713,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
           + Nuevo Objetivo
         </button>
       </div>
-      {objectiveLoading && <div className="objective-loading">Cargando objetivos...</div>}
-      {objectiveError && <div className="objective-error">{objectiveError}</div>}
+      
       {objectivesArr.map((objective) => (
         <div key={objective.id} className="objective-item">
           <div className="objective-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -845,9 +731,9 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
               </div>
               {renderOKRs(objective.id)}
             </div>
-                                  )}
-                                </div>
-                              ))}
+          )}
+        </div>
+      ))}
       {objectiveModal.open && (
         <ObjectiveModal
           mode={objectiveModal.mode}
@@ -855,8 +741,8 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
           onClose={() => setObjectiveModal({ open: false, mode: 'create', objective: null, epicId: null })}
           onSave={objectiveModal.mode === 'edit' ? handleUpdateObjective : handleCreateObjective}
         />
-                          )}
-                        </div>
+      )}
+    </div>
   );
 
   const renderEpics = (epics) => (
@@ -865,8 +751,7 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
         <span style={{fontSize:'13px',fontWeight:500}}>Épicas (Objetivos Estratégicos)</span>
         <button className="btn btn-primary" style={{fontSize:'13px',padding:'2px 10px',height:24}} onClick={() => setEpicModal({ open: true, mode: 'create', epic: null })}>+ Nueva Épica</button>
       </div>
-      {epicLoading && <div className="epic-loading">Cargando épicas...</div>}
-      {epicError && <div className="epic-error">{epicError}</div>}
+      
       {epics?.map((epic) => (
         <div key={epic.id} className="epic-item">
           <div className="epic-header-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -874,14 +759,14 @@ const ProjectDetails = ({ projectId, type = "project" }) => {
               <span className="toggle-icon">{expandedSections[`epic-${epic.id}`] ? '▼' : '▶'}</span>
               <span style={{fontSize:'13px',fontWeight:500}}>{epic.title}</span>
             </div>
-                    </div>
+          </div>
           {expandedSections[`epic-${epic.id}`] && (
             <div className="epic-content">
               <p className="epic-description" style={{fontSize:'12px',color:'#757575'}}>{epic.description}</p>
               <div className="epic-actions">
                 <button className="btn" style={{fontSize:'13px'}} onClick={() => setEpicModal({ open: true, mode: 'edit', epic })}>Editar</button>
                 <button className="btn btn-danger" style={{fontSize:'13px'}} onClick={() => handleDeleteEpic(epic.id)}>Eliminar</button>
-                </div>
+              </div>
               {renderObjectivesProject(objectives[epic.id] || [])}
             </div>
           )}
