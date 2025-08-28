@@ -19,27 +19,39 @@ from django.db import models
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
+    # Permisos por acción: lectura para autenticados, administración para mutaciones
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        # Permitir lectura a cualquier usuario autenticado; escrituras requieren admin/manager
+        if self.action in ['list', 'retrieve', 'members', 'available_users']:
+            permission_classes = [permissions.IsAuthenticated]
+            if self.action == 'members':
+                permission_classes.append(IsProjectMember)
+        elif self.action in ['add_member', 'remove_member', 'remove_member_by_id']:
+            permission_classes = [permissions.IsAuthenticated, CanManageProjectMembers]
+        else:
+            permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
+        return [perm() for perm in permission_classes]
 
     def get_queryset(self):
         user = self.request.user.users
-        
-        # Los admins ven todos los proyectos
-        if user.role == 'admin':
-            tipo = self.request.query_params.get('tipo')
-            if tipo:
-                return Project.objects.filter(tipo=tipo)
-            return Project.objects.all()
-        
-        # Los managers ven todos los proyectos
-        if user.role == 'manager':
-            tipo = self.request.query_params.get('tipo')
-            if tipo:
-                return Project.objects.filter(tipo=tipo)
-            return Project.objects.all()
-        
-        # Los empleados solo ven proyectos donde son miembros
+        # Normalizar parámetro 'tipo' para aceptar 'project'/'mission'
         tipo = self.request.query_params.get('tipo')
+        if tipo:
+            tipo = tipo.lower()
+            if tipo in ['project', 'projects']:
+                tipo = 'proyecto'
+            elif tipo in ['mission', 'missions']:
+                tipo = 'mision'
+
+        # Los admins/managers ven todos los proyectos (opcionalmente filtrados por tipo)
+        if user.role in ['admin', 'manager']:
+            if tipo:
+                return Project.objects.filter(tipo=tipo)
+            return Project.objects.all()
+
+        # Empleados: solo proyectos donde son miembros
         if tipo:
             return Project.objects.filter(tipo=tipo, members=user)
         return Project.objects.filter(members=user)
