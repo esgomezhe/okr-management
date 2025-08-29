@@ -15,6 +15,18 @@ from .permissions import (
 )
 from users.models import Users
 from django.db import models
+from rest_framework.exceptions import AuthenticationFailed
+
+# Helper para obtener el perfil de usuario autenticado de forma segura
+def get_authenticated_profile(request):
+    user = getattr(request, 'user', None)
+    if not user or not user.is_authenticated:
+        raise AuthenticationFailed('Authentication credentials were not provided or are invalid.')
+    try:
+        return user.users
+    except Exception:
+        # Si no existe el perfil asociado, tratamos como no autenticado
+        raise AuthenticationFailed('Invalid authentication credentials.')
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -22,7 +34,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todos los proyectos
         if user.role == 'admin':
@@ -50,12 +62,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated])
     def members(self, request, pk=None):
         """Obtener y agregar miembros del proyecto"""
+        auth_user = get_authenticated_profile(request)
         project = self.get_object()
 
         # Solo miembros, managers o admins pueden ver/gestionar miembros
-        user_profile = request.user.users
-        is_member = project.is_member(user_profile)
-        is_manager_or_admin = user_profile.role in ['admin', 'manager'] or project.get_member_role(user_profile) in ['owner', 'manager']
+        is_member = project.is_member(auth_user)
+        is_manager_or_admin = auth_user.role in ['admin', 'manager'] or project.get_member_role(auth_user) in ['owner', 'manager']
 
         if request.method == 'GET':
             if not (is_member or is_manager_or_admin):
@@ -79,6 +91,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['delete'], url_path='members/(?P<user_id>[^/.]+)', permission_classes=[permissions.IsAuthenticated, CanManageProjectMembers])
     def remove_member_by_id(self, request, pk=None, user_id=None):
         """Eliminar miembro del proyecto por ID de usuario"""
+        auth_user = get_authenticated_profile(request)
         project = self.get_object()
         try:
             member = ProjectMembers.objects.get(project=project, user_id=user_id)
@@ -91,6 +104,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def add_member(self, request, pk=None):
         """Agregar miembro al proyecto"""
         project = self.get_object()
+        _ = get_authenticated_profile(request)
         serializer = AddProjectMemberSerializer(data=request.data, context={'project': project})
         
         if serializer.is_valid():
@@ -102,6 +116,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def remove_member(self, request, pk=None):
         """Remover miembro del proyecto"""
         project = self.get_object()
+        _ = get_authenticated_profile(request)
         serializer = RemoveProjectMemberSerializer(data=request.data)
         
         if serializer.is_valid():
@@ -117,10 +132,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def available_users(self, request):
         """Obtener usuarios disponibles para agregar al proyecto"""
-        user = request.user.users
+        auth_user = get_authenticated_profile(request)
         
         # Los admins y managers ven todos los usuarios
-        if user.role in ['admin', 'manager']:
+        if auth_user.role in ['admin', 'manager']:
             users = Users.objects.all()
         else:
             # Los empleados no pueden ver esta lista
@@ -135,7 +150,7 @@ class EpicViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, CanCreateEpics]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todas las épicas
         if user.role == 'admin':
@@ -175,7 +190,7 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, CanCreateObjectives]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todos los objetivos
         if user.role == 'admin':
@@ -217,7 +232,7 @@ class OKRViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, CanEditOKRs]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todos los OKRs
         if user.role == 'admin':
@@ -265,7 +280,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, CanEditActivities]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todas las actividades
         if user.role == 'admin':
@@ -304,7 +319,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, EmployeeTaskAccess]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todas las tareas
         if user.role == 'admin':
@@ -359,7 +374,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def my_tasks(self, request):
         """Obtener tareas asignadas al usuario actual"""
-        user = request.user.users
+        user = get_authenticated_profile(request)
         tasks = Task.objects.filter(assignee=user)
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
@@ -367,7 +382,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def project_tasks(self, request):
         """Obtener tareas de un proyecto específico"""
-        user = request.user.users
+        user = get_authenticated_profile(request)
         project_id = request.query_params.get('project_id')
         
         if not project_id:
@@ -396,7 +411,7 @@ class LogViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todos los logs
         if user.role == 'admin':
@@ -429,7 +444,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user.users
+        user = get_authenticated_profile(self.request)
         
         # Los admins ven todos los comentarios
         if user.role == 'admin':
