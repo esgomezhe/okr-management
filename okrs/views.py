@@ -19,39 +19,27 @@ from django.db import models
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    # Permisos por acción: lectura para autenticados, administración para mutaciones
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_permissions(self):
-        # Permitir lectura a cualquier usuario autenticado; escrituras requieren admin/manager
-        if self.action in ['list', 'retrieve', 'members', 'available_users']:
-            permission_classes = [permissions.IsAuthenticated]
-            if self.action == 'members':
-                permission_classes.append(IsProjectMember)
-        elif self.action in ['add_member', 'remove_member', 'remove_member_by_id']:
-            permission_classes = [permissions.IsAuthenticated, CanManageProjectMembers]
-        else:
-            permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
-        return [perm() for perm in permission_classes]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
 
     def get_queryset(self):
         user = self.request.user.users
-        # Normalizar parámetro 'tipo' para aceptar 'project'/'mission'
-        tipo = self.request.query_params.get('tipo')
-        if tipo:
-            tipo = tipo.lower()
-            if tipo in ['project', 'projects']:
-                tipo = 'proyecto'
-            elif tipo in ['mission', 'missions']:
-                tipo = 'mision'
-
-        # Los admins/managers ven todos los proyectos (opcionalmente filtrados por tipo)
-        if user.role in ['admin', 'manager']:
+        
+        # Los admins ven todos los proyectos
+        if user.role == 'admin':
+            tipo = self.request.query_params.get('tipo')
             if tipo:
                 return Project.objects.filter(tipo=tipo)
             return Project.objects.all()
-
-        # Empleados: solo proyectos donde son miembros
+        
+        # Los managers ven todos los proyectos
+        if user.role == 'manager':
+            tipo = self.request.query_params.get('tipo')
+            if tipo:
+                return Project.objects.filter(tipo=tipo)
+            return Project.objects.all()
+        
+        # Los empleados solo ven proyectos donde son miembros
+        tipo = self.request.query_params.get('tipo')
         if tipo:
             return Project.objects.filter(tipo=tipo, members=user)
         return Project.objects.filter(members=user)
@@ -59,21 +47,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user.users)
 
-    @action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated, IsProjectMember])
+    @action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated])
     def members(self, request, pk=None):
         """Obtener y agregar miembros del proyecto"""
         project = self.get_object()
-        
+
+        # Solo miembros, managers o admins pueden ver/gestionar miembros
+        user_profile = request.user.users
+        is_member = project.is_member(user_profile)
+        is_manager_or_admin = user_profile.role in ['admin', 'manager'] or project.get_member_role(user_profile) in ['owner', 'manager']
+
         if request.method == 'GET':
+            if not (is_member or is_manager_or_admin):
+                return Response({'error': 'No tienes permisos para ver los miembros de este proyecto'}, status=status.HTTP_403_FORBIDDEN)
             members = ProjectMembers.objects.filter(project=project)
             serializer = ProjectMembersSerializer(members, many=True)
             return Response(serializer.data)
-        
+
         elif request.method == 'POST':
+            if not is_manager_or_admin:
+                return Response({'error': 'No tienes permisos para agregar miembros'}, status=status.HTTP_403_FORBIDDEN)
             serializer = AddProjectMemberSerializer(data=request.data, context={'project': project})
             if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                try:
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                except Exception as e:
+                    return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'], url_path='members/(?P<user_id>[^/.]+)', permission_classes=[permissions.IsAuthenticated, CanManageProjectMembers])
