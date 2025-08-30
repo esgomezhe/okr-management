@@ -1,183 +1,155 @@
-/* --- Variables globales --- */
 :root {
-  --primary: #1976d2;
-  --success: #43a047;
-  --danger: #e53935;
-  --gray-bg: #fff;
-  --gray-light: #f7f7f8;
-  --gray-dark: #37352f;
-  --gray-medium: #b3b3b3;
-  --radius: 6px;
+  --primary-color: #1976d2;
+  --primary-dark: #1565c0;
+  --success-color: #2e7d32;
+  --text-primary: #333;
+  --text-secondary: #666;
+  --background-light: #f7f9fc;
+  --background-white: #ffffff;
+  --border-color: #e0e0e0;
+  --radius: 8px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   --font-main: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
   font-family: var(--font-main);
-  background: var(--gray-bg);
-  color: var(--gray-dark);
+  background-color: var(--background-light);
+  color: var(--text-primary);
   margin: 0;
+  line-height: 1.6;
 }
 
-.project-details, .dashboard, .activities, .epics-list, .objectives-list, .okrs-container {
-  max-width: 900px;
-  margin: 1rem auto;
-  background: #fff;
-  border-radius: var(--radius);
-  box-shadow: none;
-  padding: 8px 0 0 0;
-  border: none;
+.project-details {
+  max-width: 1000px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+.details-header {
+  margin-bottom: 3rem;
+  text-align: center;
 }
 
 .details-header h1 {
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: 2px;
-  color: var(--gray-dark);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
 }
+
 .details-header p {
-  font-size: 13px;
-  color: #757575;
-  margin-bottom: 12px;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto 1.5rem auto;
 }
 
-.btn, .btn-primary, .btn-secondary, .btn-danger {
-  font-size: 13px;
-  padding: 2px 10px;
-  border-radius: 6px;
-  background: #f5f6f8;
-  color: var(--gray-dark);
-  border: 1px solid #e3e3e3;
-  margin-right: 4px;
-  box-shadow: none;
-  min-width: 0;
-  height: 26px;
-  line-height: 20px;
-  font-weight: 400;
-  transition: background 0.15s;
-}
-.btn-primary { background: #e3e3e3; color: var(--gray-dark); }
-.btn-danger { background: #fff0f0; color: #d14343; border: 1px solid #ffd6d6; }
-.btn-secondary { background: #f5f6f8; color: #757575; }
-.btn:hover { background: #ececec; }
-
-.epic-item, .objective-item, .okr-item, .activity-item, .task-item {
-  border-bottom: 1px solid #e3e3e3;
-  padding: 8px 0;
-  background: none;
-  box-shadow: none;
-  border-radius: 0;
-  margin-bottom: 0;
-}
-
-.toggle-icon {
-  font-size: 13px;
-  margin-right: 6px;
-  color: #b3b3b3;
-}
-
-.status-badge {
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 5px;
-  background: #f5f6f8;
-  color: #757575;
-  margin-left: 8px;
-}
-.status-badge.completed { background: #e6f4ea; color: #3a7f4d; }
-.status-badge.in_progress { background: #eaf1fb; color: #2563eb; }
-.status-badge.backlog { background: #f5f6f8; color: #757575; }
-
-.modal-content {
-  border-radius: 8px;
-  border: 1px solid #e3e3e3;
-  box-shadow: none;
-  padding: 18px 20px;
-  font-size: 14px;
-}
-
-.form-input, .form-textarea, select {
-  font-size: 13px;
-  border-radius: 5px;
-  border: 1px solid #e3e3e3;
-  padding: 5px 8px;
-  background: #fafbfc;
-  color: var(--gray-dark);
-}
-.form-group label {
-  font-size: 13px;
-  color: #757575;
-  margin-bottom: 2px;
-}
-
-.progress-bar {
-  height: 6px;
-  background: #e3e3e3;
-  border-radius: 3px;
-}
-.progress-fill {
-  background: #b2e5d6;
-  border-radius: 3px;
-  height: 100%;
-}
-.progress-text {
-  font-size: 12px;
-  color: #757575;
-  margin-left: 6px;
-}
-
-.objectives-header, .epics-header, .okrs-header, .activities-header {
+.details-content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.members-section,
+.objectives-list {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.members-header,
+.objectives-header {
+  display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding: 0 0.5rem;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  background-color: #fcfcfd;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.objectives-list, .epics-list, .okrs-container, .activities-container {
-  margin-bottom: 0.7rem;
-  padding: 0 0.5rem;
+.members-section h3,
+.objectives-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
 }
 
-.activity-dates, .activity-progress, .progress-container {
-  font-size: 12px;
-  color: #aaa;
-  margin-bottom: 0.2rem;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.07);
-  display: flex;
+.btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #bbb;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
   cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
 }
 
-.details-loading, .details-error, .details-empty, .activity-loading, .activity-error, .task-loading, .task-error {
-  font-size: 13px;
-  color: #b3b3b3;
-  padding: 8px 0;
-  text-align: left;
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
 }
 
-@media (max-width: 900px) {
-  .project-details, .dashboard, .activities, .epics-list, .objectives-list, .okrs-container {
-    max-width: 100vw;
-    padding: 0;
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.add-member-form {
+  padding: 1.5rem 2rem;
+}
+
+.add-member-form h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.members-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.members-section li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.members-section li:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.objectives-list .objective-item {
+  padding: 1.5rem 2rem;
+}
+.objectives-list .objective-item:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .project-details {
+    margin: 2rem auto;
+    padding: 0 1rem;
   }
-}
-
-@media (max-width: 600px) {
-  .project-details, .dashboard, .activities, .epics-list, .objectives-list, .okrs-container {
-    padding: 0;
+  .details-header h1 {
+    font-size: 2rem;
+  }
+  .members-header, .objectives-header {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 }
