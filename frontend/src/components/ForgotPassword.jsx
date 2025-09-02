@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { sendPasswordResetEmail } from '../utils/apiServices';
 import '../stylesheets/results.css';
@@ -8,6 +8,14 @@ import { useForm } from '../hooks/useForm';
 const initialState = { email: '' };
 
 function ForgotPassword() {
+  useEffect(() => {
+    try {
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      sessionStorage.clear();
+    } catch {}
+  }, []);
+
   const onSubmit = async (data) => {
     await sendPasswordResetEmail(data.email);
   };
@@ -35,7 +43,7 @@ function ForgotPassword() {
             className="form-input"
           />
         </BaseForm>
-        <Link to="/login/" className="form-submit-button" style={{ textAlign: 'center' }}>
+        <Link to="/login/" className="form-submit-button" style={{ textAlign: 'center' }} onClick={() => { localStorage.removeItem('access'); localStorage.removeItem('refresh'); sessionStorage.clear(); }}>
           Volver a Iniciar Sesión
         </Link>
       </div>

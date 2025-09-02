@@ -53,10 +53,16 @@ function Header() {
 
   const handleLogout = async () => {
     try {
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      sessionStorage.clear();
       await logoutUser();
       logout();
       navigate('/login/');
     } catch (error) {
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      sessionStorage.clear();
       logout();
       navigate('/login/');
     }

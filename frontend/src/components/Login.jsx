@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { registerUser } from '../utils/apiServices';
 import { AuthContext } from '../contexts/AuthContext';
@@ -19,6 +19,15 @@ function Login() {
   const { user, login, loading } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Limpiar cache local al entrar a la pantalla de login/registro
+  useEffect(() => {
+    try {
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      sessionStorage.clear();
+    } catch {}
+  }, []);
 
   // Handlers para los campos del formulario
   const handleUsernameChange = (event) => {
@@ -73,11 +82,9 @@ function Login() {
       // Limpiar localStorage antes de intentar iniciar sesión
       localStorage.removeItem('access');
       localStorage.removeItem('refresh');
-      
+      sessionStorage.clear();
       await login(username, password);
       setErrors({});
-      
-      // Redirigir a la página original o al dashboard por defecto
       const from = location.state?.from?.pathname || '/dashboard/missions';
       navigate(from, { replace: true });
     } catch (error) {
@@ -99,10 +106,9 @@ function Login() {
     }
 
     try {
-      // Limpiar localStorage antes de intentar registrar
       localStorage.removeItem('access');
       localStorage.removeItem('refresh');
-      
+      sessionStorage.clear();
       await registerUser(
         username,
         email,
@@ -293,14 +299,14 @@ function Login() {
           </button>
 
           {!isRegister && (
-            <Link to="/forgot-password/" className="forgot-password-link">
+            <Link to="/forgot-password/" className="forgot-password-link" onClick={() => { localStorage.removeItem('access'); localStorage.removeItem('refresh'); sessionStorage.clear(); }}>
               ¿Olvidaste tu contraseña?
             </Link>
           )}
 
           <button
             type="button"
-            onClick={() => setIsRegister(!isRegister)}
+            onClick={() => { setIsRegister(!isRegister); localStorage.removeItem('access'); localStorage.removeItem('refresh'); sessionStorage.clear(); }}
             className="form-submit-button secondary-button"
           >
             {isRegister ? '¿Ya tienes una cuenta? Inicia sesión' : '¿No tienes una cuenta? Regístrate'}
