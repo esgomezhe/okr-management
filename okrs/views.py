@@ -1,7 +1,6 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from .models import Project, Epic, Objective, OKR, Activity, Task, Log, Comment, ProjectMembers
 from .serializers import (
     ProjectSerializer, EpicSerializer, ObjectiveSerializer, OKRSerializer,
@@ -9,15 +8,15 @@ from .serializers import (
     ProjectMembersSerializer, AddProjectMemberSerializer, RemoveProjectMemberSerializer, UserSerializer
 )
 from .permissions import (
-    IsAdminOrManager, IsProjectMember, CanEditProject, CanCreateEpics,
-    CanCreateObjectives, CanEditOKRs, CanEditActivities, CanEditTasks,
-    CanAssignTasks, CanManageProjectMembers, EmployeeTaskAccess
+    IsAdminOrManager, CanCreateEpics,
+    CanCreateObjectives, CanEditOKRs, CanEditActivities,
+    CanManageProjectMembers, EmployeeTaskAccess
 )
 from users.models import Users
 from django.db import models
 from rest_framework.exceptions import AuthenticationFailed
 
-# Helper para obtener el perfil de usuario autenticado de forma segura
+# Sección: Utilidades de autenticación
 def get_authenticated_profile(request):
     user = getattr(request, 'user', None)
     if not user or not user.is_authenticated:
@@ -28,6 +27,7 @@ def get_authenticated_profile(request):
         # Si no existe el perfil asociado, tratamos como no autenticado
         raise AuthenticationFailed('Invalid authentication credentials.')
 
+# Sección: Proyectos
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -144,6 +144,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
+# Sección: Épicas
 class EpicViewSet(viewsets.ModelViewSet):
     queryset = Epic.objects.all()
     serializer_class = EpicSerializer
@@ -184,6 +185,7 @@ class EpicViewSet(viewsets.ModelViewSet):
         except Epic.DoesNotExist:
             return Response({'error': 'Épica no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
+# Sección: Objetivos
 class ObjectiveViewSet(viewsets.ModelViewSet):
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
@@ -226,6 +228,7 @@ class ObjectiveViewSet(viewsets.ModelViewSet):
         except Objective.DoesNotExist:
             return Response({'error': 'Objetivo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
+# Sección: OKRs
 class OKRViewSet(viewsets.ModelViewSet):
     queryset = OKR.objects.all()
     serializer_class = OKRSerializer
@@ -274,6 +277,7 @@ class OKRViewSet(viewsets.ModelViewSet):
         except OKR.DoesNotExist:
             return Response({'error': 'OKR no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
+# Sección: Actividades
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
@@ -313,6 +317,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.users)
 
+# Sección: Tareas
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -405,6 +410,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
 
+# Sección: Logs
 class LogViewSet(viewsets.ModelViewSet):
     queryset = Log.objects.all()
     serializer_class = LogSerializer
@@ -438,6 +444,7 @@ class LogViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user.users)
 
+# Sección: Comentarios
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
