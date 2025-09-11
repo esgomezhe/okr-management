@@ -6,7 +6,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
-from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.decorators import action
 from django.contrib.auth.models import update_last_login
 from .serializers import (
@@ -20,12 +19,14 @@ from django.http import JsonResponse
 
 User = get_user_model()
 
+# Sección: Registro
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     queryset = Users.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 
+# Sección: Login
 class LoginView(APIView):
     permission_classes = (AllowAny,)
 
@@ -45,6 +46,7 @@ class LoginView(APIView):
             'id': user.id
         })
 
+# Sección: Logout
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -59,6 +61,7 @@ class LogoutView(APIView):
             # Si hay algún error, aún así permitimos el cierre de sesión
             return Response({'detail': 'Cerraste sesión exitosamente.'}, status=status.HTTP_200_OK)
 
+# Sección: Perfil
 class UserDetailsView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UsersReadSerializer
@@ -74,6 +77,7 @@ class UserDetailsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+# Sección: Reset de contraseña (solicitud)
 class PasswordResetRequestView(generics.GenericAPIView):
     permission_classes = [AllowAny]
 
@@ -86,6 +90,7 @@ class PasswordResetRequestView(generics.GenericAPIView):
             return Response({"message": "Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña."})
         return Response({"message": "Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña."})
 
+# Sección: Cambio de contraseña
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
     model = User
@@ -107,6 +112,7 @@ class ChangePasswordView(generics.UpdateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Sección: Usuarios
 class UsersViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Users.objects.all()
     permission_classes = [permissions.IsAuthenticated]
@@ -133,6 +139,7 @@ class UsersViewSet(viewsets.ReadOnlyModelViewSet):
             serializer.save()
             return Response(serializer.data)
 
+# Sección: Utilidad CSRF
 @ensure_csrf_cookie
 def get_csrf_token(request):
     return JsonResponse({'detail': 'CSRF cookie set'})
